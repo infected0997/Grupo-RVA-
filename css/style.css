@@ -1,12 +1,42 @@
- * {
-     margin: 0;
-     padding: 0;
-     box-sizing: border-box;
-     font-family: 'Times New Roman', Times, serif;
-     color: black;
-     border: none;
- }
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    color: black;
+    border: none;
+}
  
- body {
-     background-image: url('../img/background_login.jpg');
+body {
+}
+
+.fundo-login{
+ 	width: 100%;
+}
+
+.login-centro{
+	margin: auto;
+	width: 50%;
+}
+
+.login-centro table{
+ 	width: 50%;
+ 	margin-left: 25%;
  }
+
+.login-centro h1{
+ 	text-align: center;
+ 	font-size: 60;
+}
+
+.login-centro input{
+	outline: none;
+ 	padding: 5px;
+ 	height: 40px;
+ 	width: 100%;
+ 	border: 1px solid black;
+ 	border-radius: 3px;
+ 	margin: 3px;
+ 	margin-left: 0px;
+
+}
+
