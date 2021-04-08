@@ -28,9 +28,7 @@
 		nome varchar(40)  NOT NULL ,
 		email varchar(100)  NOT NULL ,
 		data_nascimento date  NOT NULL ,
-		senha varchar(40)  NOT NULL ,
+		senha varchar(32)  NOT NULL ,
 		PRIMARY KEY(id_user))");
 
-	// Fecha a conexao com o banco
-	//mysqli_close($conexao);
 ?>

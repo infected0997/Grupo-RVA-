@@ -47,11 +47,15 @@ function funcaoClique(){
 			return;
 		}
 
+		// Transforma a senha em hash
+		aux[3] = $.MD5(aux[3]);
+
 		// Manda o formulario para o php de tratamento de dados
 		$.ajax({
 			type: "POST",
 			url: '../php/tratarDados.php',
 			data: {
+				tipo: 'cadastro',
 				nome: aux[0],
 				email: aux[1],
 				dataNascimento: aux[2],
