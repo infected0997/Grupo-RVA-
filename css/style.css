@@ -79,7 +79,11 @@ body {
 	background-color: #0846A1;
 }
 
-.erroForm{
+.form-erro{
 	color: red;
 	text-align: center;
+}
+
+.form-correto{
+	color: rgb(19, 160, 19) !important;
 }

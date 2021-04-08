@@ -13,7 +13,7 @@ function funcaoClique(){
 		var form = ["#usuarioId", "#emailId", "#dataId", "#senhaId", "#confSenhaId"];
 		var aux = [];
 		var testeCad = false;
-		$("#erroFormId").html("");
+		$("#formRespostaId").html("");
 
 		// Obtem os itens do formulario e testa se eles estao vazios para dar erro
 		for(cont = 0; cont < form.length; cont++){
@@ -22,7 +22,7 @@ function funcaoClique(){
 			if(aux[cont] == ""){
 				testeCad = true;
 				$(form[cont]).addClass("erro-login");
-				$("#erroFormId").html("Campos incompletos!");
+				$("#formRespostaId").html("Campos incompletos!");
 			}
 		}
 		if(testeCad){return;}
@@ -34,7 +34,7 @@ function funcaoClique(){
 			$(form[4]).addClass("erro-login");
 			$(form[3]).val("");
 			$(form[4]).val("");
-			$("#erroFormId").html("Senha precisa ter no mínimo 8 caracteres, e letras maiúsculas e minúsculas!");
+			$("#formRespostaId").html("Senha precisa ter no mínimo 8 caracteres, e letras maiúsculas e minúsculas!");
 			return;
 		}
 
@@ -43,11 +43,24 @@ function funcaoClique(){
 			testeCad = true;
 			$(form[4]).addClass("erro-login");
 			$(form[4]).val("");
-			$("#erroFormId").html("Confirmação de senha incorreta!");
+			$("#formRespostaId").html("Confirmação de senha incorreta!");
 			return;
 		}
 
-		alert("Correto!");
-
+		// Manda o formulario para o php de tratamento de dados
+		$.ajax({
+			type: "POST",
+			url: '../php/tratarDados.php',
+			data: {
+				nome: aux[0],
+				email: aux[1],
+				dataNascimento: aux[2],
+				senha: aux[3]
+			},
+			success: function(data) {
+				$("#formRespostaId").addClass("form-correto");
+				$("#formRespostaId").html(data);
+			}
+		  });
 	});
 }
