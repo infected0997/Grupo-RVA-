@@ -22,13 +22,20 @@
 	$resultado = mysqli_query($link, "CREATE DATABASE IF NOT EXISTS banco_RVA");
 	$resultado = mysqli_query($link, "USE banco_RVA");
 
-	// Cria a table t_usuarios
-	$resultado = mysqli_query($link, "CREATE TABLE IF NOT EXISTS t_usuarios(
-		id_user int(4)  NOT NULL AUTO_INCREMENT ,
-		nome varchar(40)  NOT NULL ,
-		email varchar(100)  NOT NULL ,
+	// Cria a table pessoa
+	$resultado = mysqli_query($link, "CREATE TABLE IF NOT EXISTS pessoa(
+		id_user INT(4)  NOT NULL AUTO_INCREMENT ,
+		nome VARCHAR(40)  NOT NULL ,
+		email VARCHAR(100)  NOT NULL ,
 		data_nascimento date  NOT NULL ,
-		senha varchar(32)  NOT NULL ,
+		senha VARCHAR(32)  NOT NULL ,
+		autenticado TINYINT(1) ,
+		PRIMARY KEY(id_user))");
+
+	// Cria a table autenticar
+	$resultado = mysqli_query($link, "CREATE TABLE IF NOT EXISTS seguranca(
+		id_user INT(4)  NOT NULL,
+		token_autenticar VARCHAR(128)  NOT NULL ,
 		PRIMARY KEY(id_user))");
 
 ?>

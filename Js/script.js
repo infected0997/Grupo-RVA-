@@ -1,7 +1,38 @@
 $(document).ready(function(){
 
+
+	// Checa se esta no index para rodar a autenticacao por token
+	if(window.location.pathname == "/index.html"){
+		autenticarUser();
+	}
 	funcaoClique();
 });
+
+// Funcao de autenticar usuario
+function autenticarUser(){
+	// Pega o token da URL
+	var tokenAuth = window.location.href.split("#").pop();
+
+	// Manda o formulario para o php de tratamento de dados
+	$.ajax({
+		type: "POST",
+		dataType: "json",
+		url: "../php/tratarDados.php",
+		data: {
+			tipo: 'autenticar',
+			token: tokenAuth
+		},
+		// Imprime mensagem de sucesso ou falha
+		success: function(data) {
+			/*$("#formRespostaId").removeClass("form-correto");
+			if(data == "Sucesso!"){
+				$("#formRespostaId").addClass("form-correto");
+				data = data+" Por favor autentique sua conta pelo seu e-mail.";
+			}
+			$("#formRespostaId").html(data);*/
+		}
+	});
+}
 
 // Armazena funcoes de clique
 function funcaoClique(){
@@ -53,7 +84,8 @@ function funcaoClique(){
 		// Manda o formulario para o php de tratamento de dados
 		$.ajax({
 			type: "POST",
-			url: '../php/tratarDados.php',
+			dataType: "json",
+			url: "../php/tratarDados.php",
 			data: {
 				tipo: 'cadastro',
 				nome: aux[0],
@@ -61,10 +93,15 @@ function funcaoClique(){
 				dataNascimento: aux[2],
 				senha: aux[3]
 			},
+			// Imprime mensagem de sucesso ou falha
 			success: function(data) {
-				$("#formRespostaId").addClass("form-correto");
+				$("#formRespostaId").removeClass("form-correto");
+				if(data == "Sucesso!"){
+					$("#formRespostaId").addClass("form-correto");
+					data = data+" Por favor autentique sua conta pelo seu e-mail.";
+				}
 				$("#formRespostaId").html(data);
 			}
-		  });
+		});
 	});
 }
