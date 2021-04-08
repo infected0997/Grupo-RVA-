@@ -29,7 +29,7 @@
         </header>
     </div>
     <!-- Header principal-->
-<a href="#" id="senha-esquecida">Esqueceu a senha?</a>
+
     <!-- inicio Login-->
     <div class="fundo-login">
         <div class="login-centro">
@@ -50,10 +50,13 @@
                     <td><input type="password" id="senhaId" placeholder="Senha"></td>
                 </tr>
                 <tr>
-                    <td><input type="password" id="confSenhaId" placeholder="Comfirmar senha"></td>
+                    <td><input type="password" id="confSenhaId" placeholder="Confirmar senha"></td>
                 </tr>
                 <tr>
-                    <td><input type="submit" value="Login"></td>
+                    <td id="erroFormId" class="erroForm"></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><button id="botaoCadastroId" class="botao-login">Cadastrar</td>
                 </tr>
             </table>
 

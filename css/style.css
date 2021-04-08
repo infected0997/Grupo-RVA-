@@ -37,6 +37,49 @@ body {
  	border-radius: 3px;
  	margin: 3px;
  	margin-left: 0px;
-
 }
 
+.login-centro input::placeholder{
+	transition-property: opacity;
+	transition: 0.2s;
+	opacity: 1;
+}
+
+.login-centro input:focus::placeholder{
+	opacity: 0;
+}
+
+.erro-login{
+	border: 1px solid red !important;
+}
+
+.botao-login{
+	background-color: #0D6EFD;
+	color: white;
+	position: relative;
+	left: 33%;
+	outline: none;
+ 	padding: 5px;
+ 	height: 40px;
+ 	width: 33%;
+ 	border: 0px;
+ 	border-radius: 3px;
+ 	margin: 3px;
+ 	margin-left: 0px;
+ 	transition-property: background-color;
+ 	transition: 0.1s;
+}
+
+.botao-login:hover{
+	background-color: #0A58CA;
+	cursor: pointer;
+}
+
+.botao-login:active{
+	background-color: #0846A1;
+}
+
+.erroForm{
+	color: red;
+	text-align: center;
+}
