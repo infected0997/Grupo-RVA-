@@ -52,7 +52,7 @@
             // Cria um token e busca o user_id do usuario para inserir na tabela de autenticacao 
             $token = bin2hex(random_bytes(64));
             $resultado = mysqli_query($conexao, "SELECT * FROM pessoa WHERE nome = '$nome' AND senha = '$senha'");
-            $idUsuario = ($row = mysqli_fetch_assoc($resultado)["id_user"]);
+            $idUsuario = mysqli_fetch_assoc($resultado)["id_user"];
             $resultado = mysqli_query($conexao, "INSERT IGNORE INTO seguranca (id_user,token_autenticar) VALUES ('$idUsuario', '$token')");
 
             // Conteudo da mensagem
@@ -75,8 +75,35 @@
 
     // Funcao para efetuar login
     function funcLogin($conexao){
+        // Pega os dados do login
+        $nome = $_POST['nome'];
+        $senha = $_POST['senha'];
+
+        // Procura se tem dados correspondentes no banco
+        $resultado = mysqli_query($conexao, "SELECT * FROM pessoa WHERE nome = '$nome' AND senha = '$senha'");
+        if(($idUsuario = mysqli_fetch_assoc($resultado)['id_user']) == null){
+            ob_end_clean();
+            echo json_encode(false);
+            exit();
+        }
+        // Cria um token de sessao e retorna ele para o usuario
+        $tokenSessao = bin2hex(random_bytes(16));
+        $resultado = mysqli_query($conexao, "UPDATE seguranca SET token_sessao = '$tokenSessao' WHERE id_user = '$idUsuario'");
+        ob_end_clean();
+        echo json_encode($tokenSessao);
     }
 
+    // Funcao para preparar pagina de usuario
+    function prepararUser($conexao){
+        // Pega o token de sessao e procura a conta
+        $tokenSessao = $_POST['token'];
+        $resultado = mysqli_query($conexao, "SELECT * FROM seguranca WHERE token_sessao = '$tokenSessao'");
+        $idUsuario = mysqli_fetch_assoc($resultado)["id_user"];
+        $resultado = mysqli_query($conexao, "SELECT * FROM pessoa WHERE id_user = '$idUsuario'");
+
+        // Retorna o nome de usuario
+        echo json_encode(mysqli_fetch_assoc($resultado)['nome']);
+    }
 
     // ~~ CODIGO PRINCIPAL ~~ // 
 
@@ -85,11 +112,14 @@
     if($tipo == 'cadastro'){
         funcCadastro($link);
     }
-    if($tipo == 'login'){
+    else if($tipo == 'login'){
         funcLogin($link);
     }
-    if($tipo == 'autenticar'){
+    else if($tipo == 'autenticar'){
         authConta($link);
+    }
+    else if($tipo == 'preparaUser'){
+        prepararUser($link);
     }
     
     // Fecha a conexao com o banco
