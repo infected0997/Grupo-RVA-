@@ -35,7 +35,8 @@
 	// Cria a table autenticar
 	$resultado = mysqli_query($link, "CREATE TABLE IF NOT EXISTS seguranca(
 		id_user INT(4)  NOT NULL,
-		token_autenticar VARCHAR(128)  NOT NULL ,
+		token_autenticar VARCHAR(128) ,
+		token_sessao VARCHAR(32) ,
 		PRIMARY KEY(id_user))");
 
 ?>

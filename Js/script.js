@@ -2,14 +2,28 @@ $(document).ready(function(){
 
 
 	// Checa se esta no index para rodar a autenticacao por token
-	if(window.location.pathname == "/index.html"){
-		autenticarUser();
+	if(window.location.pathname == "/pages/auth.html"){
+		autenticarCadastro();
 	}
+	prepararPagina();
 	funcaoClique();
 });
 
+// Funcao para preparar as paginas
+function prepararPagina(){
+	// Obtem os cookies da pagina e testa se o cookie do site esta la
+	var cookies = document.cookie;
+	if(cookies.indexOf("RVAtokenSessao=") == -1){return;}
+
+	// Obtem a chave de sessao do usuario pelos cookies
+	var chaveSessao = cookies.substring(cookies.indexOf("RVAtokenSessao="), cookies.length);
+	chaveSessao = chaveSessao.substring(chaveSessao.indexOf("=")+1, 47);
+	console.log(cookies);
+	console.log(chaveSessao);
+}
+
 // Funcao de autenticar usuario
-function autenticarUser(){
+function autenticarCadastro(){
 	// Pega o token da URL
 	var tokenAuth = window.location.href.split("#").pop();
 
@@ -24,12 +38,9 @@ function autenticarUser(){
 		},
 		// Imprime mensagem de sucesso ou falha
 		success: function(data) {
-			/*$("#formRespostaId").removeClass("form-correto");
-			if(data == "Sucesso!"){
-				$("#formRespostaId").addClass("form-correto");
-				data = data+" Por favor autentique sua conta pelo seu e-mail.";
-			}
-			$("#formRespostaId").html(data);*/
+			console.log(data);
+			document.cookie = "RVAtokenSessao="+data+";path = /";
+			window.location.href = "http://localhost/index.html";
 		}
 	});
 }

@@ -12,16 +12,27 @@
     function authConta($conexao){
         // Recebe o token
         $tokenAuth = $_POST['token'];
+
+        // Procura os tokens do banco e os compara com o recebido
         $resultado = mysqli_query($conexao, "SELECT * FROM seguranca");
         while($row = mysqli_fetch_assoc($resultado)){
             $tokenBanco = $row["token_autenticar"];
             if($tokenBanco != $tokenAuth){continue;}
+
+            // Se o token for igual, o usuario e autenticado no banco
             else{
                 $idUser = $row["id_user"];
                 $resultado = mysqli_query($conexao, "UPDATE pessoa SET autenticado = 1 WHERE id_user = '$idUser'");
-                $resultado = mysqli_query($conexao, "UPDATE seguranca SET token_autenticar = 'X' WHERE id_user = '$idUser'");
+                $resultado = mysqli_query($conexao, "UPDATE seguranca SET token_autenticar = NULL WHERE id_user = '$idUser'");
+                $resultado = mysqli_query($conexao, "SELECT * FROM pessoa WHERE id_user = '$idUser'");
+
             }
         }
+        // Gera o token de sessao coloca no banco e envia para o usuario
+        $tokenSessao = bin2hex(random_bytes(16));
+        $resultado = mysqli_query($conexao, "UPDATE seguranca SET token_sessao = '$tokenSessao' WHERE id_user = '$idUser'");
+        ob_end_clean();
+        echo json_encode($tokenSessao);
     }
 
     // Funcao para cadastrar usuario
@@ -46,11 +57,14 @@
 
             // Conteudo da mensagem
             $title = "Autenticação de usuario";
-            $linque = "http://localhost/index.html#".$token;
+            $linque = "http://localhost/pages/auth.html#".$token;
             $msg = "<p>Por favor clique no link a seguir para autenticar sua conta em nosso site: ".
                    "<a href=$linque>Link</a></p>";
 
+            // Manda o Email
             //funcEmail($email, $title, $msg);
+
+            // Limpa o buffer e manda o sucesso
             ob_end_clean();
             echo json_encode($msg);
         }
