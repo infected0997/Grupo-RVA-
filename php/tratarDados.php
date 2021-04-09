@@ -62,11 +62,11 @@
                    "<a href=$linque>Link</a></p>";
 
             // Manda o Email
-            //funcEmail($email, $title, $msg);
+            funcEmail($email, $title, $msg);
 
             // Limpa o buffer e manda o sucesso
             ob_end_clean();
-            echo json_encode($msg);
+            echo json_encode("Sucesso!");
         }
         else{
             echo json_encode("Erro na inserção em banco!");
@@ -91,6 +91,51 @@
         $resultado = mysqli_query($conexao, "UPDATE seguranca SET token_sessao = '$tokenSessao' WHERE id_user = '$idUsuario'");
         ob_end_clean();
         echo json_encode($tokenSessao);
+    }
+
+    // Funcao para recuperar conta por email
+    function recuperacaoEmail($conexao){
+        // Recupera o valor do email e o procura no banco de dados
+        $email = $_POST['email'];
+        $resultado = mysqli_query($conexao, "SELECT * FROM pessoa WHERE email = '$email'");
+        if(($idUsuario = mysqli_fetch_assoc($resultado)['id_user']) == null){
+            ob_end_clean();
+            echo json_encode(false);
+            exit();
+        }
+
+        // Cria um token para a recuperacao de senha e o coloca no banco
+        $tokenSenha = bin2hex(random_bytes(32));
+        $resultado = mysqli_query($conexao, "UPDATE seguranca SET token_senha = '$tokenSenha' WHERE id_user = '$idUsuario'");
+
+        // Conteudo da mensagem
+        $title = "Mudança de senha";
+        $linque = "http://localhost/pages/auth.html#".$tokenSenha;
+        $msg = "<p>Por favor clique no link a seguir para mudar sua senha: ".
+               "<a href=$linque>Link</a></p>";
+
+        // Manda o Email
+        funcEmail($email, $title, $msg);
+    }
+
+    // Funcao para mudar senha
+    function mudarSenha($conexao){
+        $token = $_POST['tokenA'];
+        $senha = $_POST['novaSenha'];
+
+        // Descobre qual tipo de token que e e pega o id do usuario
+        if(strlen($token) == 32){
+            $resultado = mysqli_query($conexao, "SELECT * FROM seguranca WHERE token_sessao = '$token'");
+        }
+        else{
+            $resultado = mysqli_query($conexao, "SELECT * FROM seguranca WHERE token_senha = '$token'");
+        }
+        $idUsuario = mysqli_fetch_assoc($resultado)["id_user"];
+
+        // Muda a senha do user
+        $resultado = mysqli_query($conexao, "UPDATE pessoa SET senha = '$senha' WHERE id_user = '$idUsuario'");
+        ob_end_clean();
+        echo json_encode("");
     }
 
     // Funcao para preparar pagina de usuario
@@ -121,7 +166,13 @@
     else if($tipo == 'preparaUser'){
         prepararUser($link);
     }
-    
+    else if($tipo == 'recuperarConta'){
+        recuperacaoEmail($link);
+    }
+    else if($tipo == 'mudancaSenha'){
+        mudarSenha($link);
+    }
+
     // Fecha a conexao com o banco
 	mysqli_close($link);
 

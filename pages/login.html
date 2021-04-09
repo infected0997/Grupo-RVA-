@@ -12,6 +12,8 @@
 </head>
 
 <body>
+    <div class="div-overlay" id="dOverlay">
+	</div>
     <!-- Header principal-->
     <div class="container">
         <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
@@ -35,19 +37,23 @@
         <div class="login-centro">
             <table id="cadastroLoginId">
                 <tr>
-                    <td><h1>Login</h1></td>
+                    <td colspan="2"><h1>Login</h1></td>
                 </tr>
                 <tr>
-                    <td><input type="text" id="usuarioId" placeholder="Nome de usuario"></td>
+                    <td colspan="2"><input type="text" id="usuarioId" placeholder="Nome de usuario"></td>
                 </tr>
                 <tr>
-                    <td><input type="password" id="senhaId" placeholder="Senha"></td>
+                    <td colspan="2"><input type="password" id="senhaId" placeholder="Senha"></td>
+                </tr>
+                <tr>
+                    <td><a id="formularioCadastroId" class="esquecer-senha">Cadastrar-se</a></td>
+                    <td class="alinhar-texto-direita"><a id="esqueciSenhaId" class="esquecer-senha">Esqueceu sua senha?</a></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><button id="botaoLoginId" class="botao-login">Logar</td>
                 </tr>
                 <tr>
                     <td id="formRespostaId" class="form-erro"></td>
-                </tr>
-                <tr>
-                    <td colspan="2"><button id="botaoLoginId" class="botao-login">Cadastrar</td>
                 </tr>
             </table>
 

@@ -37,6 +37,7 @@
 		id_user INT(4)  NOT NULL,
 		token_autenticar VARCHAR(128) ,
 		token_sessao VARCHAR(32) ,
+		token_senha VARCHAR(64) ,
 		PRIMARY KEY(id_user))");
 
 ?>
