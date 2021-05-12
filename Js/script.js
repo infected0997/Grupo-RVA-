@@ -12,43 +12,37 @@ $(document).ready(function(){
 
 // Funcao para preparar as paginas
 function prepararPagina(){
-	// Obtem os cookies da pagina e testa se o cookie do site esta la
-	var cookies = document.cookie;
-	if(cookies.indexOf("RVAtokenSessao=") == -1){
-		// Testa se o usuario esta em uma pagina indevida e joga ele para a index
-		if(window.location.pathname == "/pages/user.html"){
-			window.location.href = "http://localhost/index.html";
-		}
-		return;
-	}
-	if(window.location.pathname == "/pages/login.html"){
-		window.location.href = "http://localhost/index.html";
-	}
-
-	// Obtem a chave de sessao do usuario pelos cookies
-	chaveSessao = cookies.substring(cookies.indexOf("RVAtokenSessao="), cookies.length);
-	chaveSessao = chaveSessao.substring(chaveSessao.indexOf("=")+1, 47);
-	
-	// Muda o login para imagem de usuario
-	$("#loginUsuario").html("<a href='http://localhost/pages/user.html' class='nav-link'>Usuario</a>");
-
-	// PREPARA A PAGINA USER.HTML //
-	if(window.location.pathname == "/pages/user.html"){
-		// Manda o token de sessao para o php retornar informacoes da pagina
-		$.ajax({
-			type: "POST",
-			dataType: "json",
-			url: "../php/tratarDados.php",
-			data: {
-				tipo: 'preparaUser',
-				token: chaveSessao
-			},
-			// Caso sucesso volta com as informacoes e forma a pagina
-			success: function(data) {
-				$("#nomePessoaId").html(data.charAt(0).toUpperCase() + data.slice(1));
+	// Manda o token de sessao para o php retornar informacoes da pagina
+	$.ajax({
+		type: "POST",
+		dataType: "json",
+		url: "../php/tratarDados.php",
+		data: {
+			tipo: 'preparaUser'
+		},
+		// Caso sucesso volta com as informacoes e forma a pagina
+		success: function(data) {
+			if(data.status == 'n'){
+				// Testa se o usuario esta em uma pagina indevida e joga ele para a index
+				if(window.location.pathname == "/pages/user.html"){
+					window.location.href = "http://localhost/index.html";
+				}
+				return;
 			}
-		});
-	}
+			// Muda o login para imagem de usuario
+			$("#loginUsuario").html("<a href='http://localhost/pages/user.html' class='nav-link'>Usuario</a>");
+
+			// PREPARA A PAGINA USER.HTML //
+			if(window.location.pathname == "/pages/user.html"){
+				$("#nomePessoaId").html(data.nome);
+			}
+
+			// Redireciona o usuario se estiver em uma pagina incorreta
+			if(window.location.pathname == "/pages/login.html"){
+				window.location.href = "http://localhost/index.html";
+			}
+		}
+	});
 }
 
 // Funcao de autenticar usuario
@@ -89,7 +83,7 @@ function mudarSenha(token){
 		$("#dOverlay").html(over);
 		$("#dOverlay").show();
 
-		// Manda o nome de email para o php
+		// Manda a nova senha para o php
 		$("#botaoNovaSenhaId").click(function(){
 			var senha = $("#novaSenhaId").val();
 
@@ -111,12 +105,13 @@ function mudarSenha(token){
 					novaSenha: senha,
 					tokenA: token
 				},
-				// Destroi os cookies e volta para a index
+				// Se a mudança der certo, volta para o index
 				success: function(data) {
-					document.cookie = "RVAtokenSessao="+data+"; expires = Thu, 01 Jan 1970 00:00:00 GMT;path = /;domain=localhost";
-					$("#dOverlay").hide();
-					$("#dOverlay").html();
-					window.location.href = "http://localhost/index.html";
+					if(data.status = 's'){
+						$("#dOverlay").hide();
+						$("#dOverlay").html();
+						window.location.href = "http://localhost/index.html";
+					}
 				}
 			});
 		});
@@ -151,7 +146,7 @@ function funcaoClique(){
 					'<table><tr><td colspan="2"><h4 class="alinha-texto-centro">Insira seu email abaixo</h4></td></tr>'+
 					'<tr><td colspan="2"><input type="email" id="emailRecuperarId" placeholder="Endereco de email da conta"></td></tr>'+
 					'<tr><td colspan="2"><button id="botaoRecuperarId" class="botao-email">Recuperar Senha</td></tr>'+
-					'<tr><td id="formRespostaId" class="form-erro"></td></tr>'+
+					'<tr><td id="formRecEmailId" class="form-erro"></td></tr>'+
 			  		'</table></div></div>';
 		
 		// Ativa o overlay
@@ -173,8 +168,13 @@ function funcaoClique(){
 				},
 				// Esconde o overlay
 				success: function(data) {
+					$("#formRespostaId").removeClass("form-correto");
+					if(data.status == "s"){
+						$("#formRespostaId").addClass("form-correto");
+					}
 					$("#dOverlay").hide();
 					$("#dOverlay").html();
+					$("#formRespostaId").html(data.mensagem);
 				}
 			});
 		});
@@ -182,7 +182,7 @@ function funcaoClique(){
 
 	// Funcao de clique chamar alteracao de senha
 	$("#alterarSenhaId").click(function(){
-		mudarSenha(chaveSessao);
+		mudarSenha(null);
 	});
 
 	// Funcao de clique de cadastro
@@ -244,11 +244,10 @@ function funcaoClique(){
 			// Imprime mensagem de sucesso ou falha
 			success: function(data) {
 				$("#formRespostaId").removeClass("form-correto");
-				if(data == "Sucesso!"){
+				if(data.status == "s"){
 					$("#formRespostaId").addClass("form-correto");
-					data = data+" Por favor autentique sua conta pelo seu e-mail.";
 				}
-				$("#formRespostaId").html(data);
+				$("#formRespostaId").html(data.mensagem);
 			}
 		});
 	});
@@ -270,6 +269,7 @@ function funcaoClique(){
 			if(aux[cont] == ""){
 				testeCad = true;
 				$(form[cont]).addClass("erro-login");
+				$("#formRespostaId").removeClass("form-correto");
 				$("#formRespostaId").html("Campos incompletos!");
 			}
 		}
@@ -290,15 +290,12 @@ function funcaoClique(){
 			},
 			// Imprime mensagem de sucesso ou falha
 			success: function(data) {
-				$("#formRespostaId").addClass("form-correto");
-				if(!data){
-					$("#formRespostaId").removeClass("form-correto");
-					$("#formRespostaId").html("Nome de usuario e/ou senha incorretos!");
-					return;
+				$("#formRespostaId").removeClass("form-correto");
+				if(data.status == "s"){
+					$("#formRespostaId").addClass("form-correto");
+					window.location.href = "http://localhost/index.html";
 				}
-				$("#formRespostaId").html("Sucesso!");
-				document.cookie = "RVAtokenSessao="+data+";path = /";
-				window.location.href = "http://localhost/index.html";
+				$("#formRespostaId").html(data.mensagem);
 			}
 		});
 	});
