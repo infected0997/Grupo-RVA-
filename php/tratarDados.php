@@ -1,4 +1,5 @@
 <?php
+    include 'senhaB.php';
     include 'inicializarBanco.php';
 
     // ~~ FUNCOES ~~ //
@@ -217,9 +218,9 @@
     else if($tipo == 'autenticar'){
         authConta($link);
     }
-    else if($tipo == 'preparaUser'){
+    /*else if($tipo == 'preparaUser'){
         prepararUser($link);
-    }
+    }*/
     else if($tipo == 'recuperarConta'){
         recuperacaoEmail($link);
     }

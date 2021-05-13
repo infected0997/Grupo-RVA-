@@ -1,9 +1,7 @@
-var chaveSessao;
-
+var loc = window.location.pathname;
 $(document).ready(function(){
 
 	// Checa se esta no index para rodar a autenticacao por token
-	var loc = window.location.pathname;
 	if(loc.substring(loc.lastIndexOf('/')+1, loc.lastIndexOf('/')+10) == "auth.html"){
 		autenticarCadastro();
 	}
@@ -17,7 +15,7 @@ function prepararPagina(){
 	$.ajax({
 		type: "POST",
 		dataType: "json",
-		url: "../php/tratarDados.php",
+		url: "/Grupo-RVA-/php/tratarDados.php",
 		data: {
 			tipo: 'preparaUser'
 		},
@@ -25,8 +23,8 @@ function prepararPagina(){
 		success: function(data) {
 			if(data.status == 'n'){
 				// Testa se o usuario esta em uma pagina indevida e joga ele para a index
-				if(window.location.pathname == "/pages/user.html"){
-					window.location.href = "http://localhost/index.html";
+				if(loc.substring(loc.lastIndexOf('/')+1, loc.lastIndexOf('/')+50) == "user.html"){
+					window.location.href = "http://localhost/Grupo-RVA-/index.html";
 				}
 				return;
 			}
