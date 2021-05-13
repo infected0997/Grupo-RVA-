@@ -26,12 +26,23 @@
             $resultado = mysqli_query($conexao, "UPDATE seguranca SET token_autenticar = NULL WHERE id_user = '$idUser'");
             $resultado = mysqli_query($conexao, "SELECT * FROM pessoa WHERE id_user = '$idUser'"); 
         }
-        else{exit;}
+        else{
+            $retorno['status'] = 'n';
+            $retorno['mensagem'] = 'Token invalido!';
+
+            echo json_encode($retorno);
+            exit;
+        }
         // Cria uma sessão com o usuario e salva seu id nela
         $_SESSION['usuario'] = mysqli_fetch_assoc($resultado)['id_user'];
         $_SESSION['id'] = session_id();
         $_SESSION['tempo'] = time();
         $_SESSION['limite'] = 3600;
+
+        $retorno['status'] = 's';
+        $retorno['mensagem'] = 'Email autenticado com sucesso!';
+
+        echo json_encode($retorno);
     }
 
     // Funcao para cadastrar usuario

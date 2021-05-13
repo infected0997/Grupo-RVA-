@@ -3,7 +3,8 @@ var chaveSessao;
 $(document).ready(function(){
 
 	// Checa se esta no index para rodar a autenticacao por token
-	if(window.location.pathname == "/pages/auth.html"){
+	var loc = window.location.pathname;
+	if(loc.substring(loc.lastIndexOf('/')+1, loc.lastIndexOf('/')+10) == "auth.html"){
 		autenticarCadastro();
 	}
 	prepararPagina();
@@ -59,10 +60,11 @@ function autenticarCadastro(){
 				tipo: 'autenticar',
 				token: tokenAuth
 			},
-			// Caso sucesso volta com o token de sessao e o coloca em um cookie
+			// Caso sucesso volta a pagina principal
 			success: function(data) {
-				document.cookie = "RVAtokenSessao="+data+";path = /;domain=localhost";
-				window.location.href = "http://localhost/index.html";
+				if(data.status == 's'){
+					window.location.href = "http://localhost/index.html";
+				}
 			}
 		});
 	}
@@ -88,7 +90,7 @@ function mudarSenha(token){
 			var senha = $("#novaSenhaId").val();
 
 			// Testa se a senha tem 8 caracteres e letras minusculas e maiuscula
-			if(senha.length < 8 || senha == senha.toLowerCase() || senha == senha.toUpperCase()){
+			if(senha.length < 12 || senha == senha.toLowerCase() || senha == senha.toUpperCase()){
 				return;
 			}
 
@@ -207,13 +209,23 @@ function funcaoClique(){
 		if(testeCad){return;}
 
 		// Testa se a senha tem 8 caracteres e letras minusculas e maiuscula
-		if(aux[3].length < 8 || aux[3] == aux[3].toLowerCase() || aux[3] == aux[3].toUpperCase()){
+		if(aux[3].length < 12 || aux[3] == aux[3].toLowerCase() || aux[3] == aux[3].toUpperCase()){
 			testeCad = true;
+		}
+		var testeSimbolo = "!@#$%^&*";
+		var simboloTodos = true;
+		for(cont = 0; cont < testeSimbolo.length; cont++){
+			if(aux[3].indexOf(testeSimbolo.charAt(cont)) != -1){
+				simboloTodos = false;
+				break;
+			}
+		}
+		if(testeCad || simboloTodos){
 			$(form[3]).addClass("erro-login");
 			$(form[4]).addClass("erro-login");
 			$(form[3]).val("");
 			$(form[4]).val("");
-			$("#formRespostaId").html("Senha precisa ter no mínimo 8 caracteres, e letras maiúsculas e minúsculas!");
+			$("#formRespostaId").html("Senha precisa ter no mínimo 12 caracteres, letras maiúsculas e minúsculas, e 1 simbolo!");
 			return;
 		}
 
