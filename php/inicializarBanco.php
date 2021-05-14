@@ -1,8 +1,7 @@
-<?php 
-
+<?php
 	// Parametros do banco
 	$user = 'root';
-	$password = 'root';
+	$password = SENHAB;
 	$db = '';
 	$host = 'localhost';
 	$port = 3307;
