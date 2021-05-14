@@ -2,18 +2,17 @@
     include 'senhaB.php';
     include 'inicializarBanco.php';
 
+    session_start();
+
     // ~~ FUNCOES ~~ //
 
     // Funcao para mandar email
     function funcEmail($destino, $titulo, $mensagem){
-        //include 'enviarEmail.php';
+        include 'enviarEmail.php';
     }
 
     // Funcao para autenticar email da conta
     function authConta($conexao){
-        // Começa a inicializar a sessão
-        session_start();
-
         // Recebe o token
         $tokenAuth = $_POST['token'];
 
@@ -38,7 +37,9 @@
         $_SESSION['usuario'] = mysqli_fetch_assoc($resultado)['id_user'];
         $_SESSION['id'] = session_id();
         $_SESSION['tempo'] = time();
-        $_SESSION['limite'] = 3600;
+        $_SESSION['tempoAuth'] = time();
+        $_SESSION['sessao'] = 3600;
+        $_SESSION['autenticado'] = 30;
 
         $retorno['status'] = 's';
         $retorno['mensagem'] = 'Email autenticado com sucesso!';
@@ -70,12 +71,12 @@
 
             // Conteudo da mensagem
             $title = "Autenticação de usuario";
-            $linque = "http://localhost/pages/auth.html#".$token;
+            $linque = "http://localhost/Grupo-RVA-/pages/auth.html#".$token;
             $msg = "<p>Por favor clique no link a seguir para autenticar sua conta em nosso site: ".
                    "<a href=$linque>Link</a></p>";
 
             // Manda o Email
-            //funcEmail($email, $title, $msg);
+            funcEmail($email, $title, $msg);
 
             // Manda a mensagem de sucesso
             $retorno["status"] = "s";
@@ -92,9 +93,6 @@
 
     // Funcao para efetuar login
     function funcLogin($conexao){
-        // Começa a inicializar a sessão
-        session_start();
-
         // Pega os dados do login
         $nome = $_POST['nome'];
         $senha = $_POST['senha'];
@@ -120,7 +118,9 @@
         $_SESSION['usuario'] = $row['id_user'];
         $_SESSION['id'] = session_id();
         $_SESSION['tempo'] = time();
-        $_SESSION['limite'] = 3600;
+        $_SESSION['tempoAuth'] = time();
+        $_SESSION['sessao'] = 3600;
+        $_SESSION['autenticado'] = 300;
 
         // Retorna o sucesso
         $retorno["status"] = "s";
@@ -161,7 +161,6 @@
 
     // Funcao para mudar senha
     function mudarSenha($conexao){
-        session_start();
         $token = $_POST['tokenA'];
         $senha = $_POST['novaSenha'];
 
@@ -173,6 +172,13 @@
             $idUsuario = mysqli_fetch_assoc($resultado)['id_user'];
         }
         else{
+            // Se 5 minutos de autenticacao passaram, refusa a troca de senha
+            if((time() - $_SESSION['tempoAuth']) > $_SESSION['autenticado']){
+                $retorno['status'] = 'n';
+                $retorno['mensagem'] = 'Usuário precisa se autenticar!';
+                echo json_encode($retorno);
+                exit;
+            }
             $idUsuario = $_SESSION['usuario'];
         }
 
@@ -183,7 +189,9 @@
         unset($_SESSION['usuario']);
         unset($_SESSION['id']);
         unset($_SESSION['tempo']);
-        unset($_SESSION['limite']);
+        unset($_SESSION['tempoAuth']);
+        unset($_SESSION['sessao']);
+        unset($_SESSION['autenticado']);
         session_destroy();
 
         $retorno['status'] = 's';
@@ -218,9 +226,9 @@
     else if($tipo == 'autenticar'){
         authConta($link);
     }
-    /*else if($tipo == 'preparaUser'){
+    else if($tipo == 'preparaUser'){
         prepararUser($link);
-    }*/
+    }
     else if($tipo == 'recuperarConta'){
         recuperacaoEmail($link);
     }

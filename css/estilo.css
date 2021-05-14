@@ -88,7 +88,7 @@ body {}
 
 /* PAGINA INICIAL */
 .fundo-preto{
-    box-shadow: 1px 1px 5px black;
+    box-shadow: 1px 1px 5px gray;
 }
 
 /* PAGINA LOGIN/CADASTRO */
@@ -248,7 +248,7 @@ body {}
 }
 
 .corFundoB {
-    background-image: linear-gradient(to bottom right, #00BFFF, #F4A460);
+    background-color: #fffffc;
 }
 
 .corFundoContainer {
@@ -265,5 +265,5 @@ body {}
 
 .textStyle {
     color: #1C1C1C;
-    text-align-last: center;
+    text-align: center;
 }

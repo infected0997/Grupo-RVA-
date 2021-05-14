@@ -29,16 +29,11 @@ function prepararPagina(){
 				return;
 			}
 			// Muda o login para imagem de usuario
-			$("#loginUsuario").html("<a href='http://localhost/pages/user.html' class='nav-link'>Usuario</a>");
+			$("#loginUsuario").html("<a href='http://localhost/Grupo-RVA-/pages/user.html' class='nav-link'>Usuario</a>");
 
 			// PREPARA A PAGINA USER.HTML //
-			if(window.location.pathname == "/pages/user.html"){
+			if(window.location.pathname == "/Grupo-RVA-/pages/user.html"){
 				$("#nomePessoaId").html(data.nome);
-			}
-
-			// Redireciona o usuario se estiver em uma pagina incorreta
-			if(window.location.pathname == "/pages/login.html"){
-				window.location.href = "http://localhost/index.html";
 			}
 		}
 	});
@@ -61,7 +56,7 @@ function autenticarCadastro(){
 			// Caso sucesso volta a pagina principal
 			success: function(data) {
 				if(data.status == 's'){
-					window.location.href = "http://localhost/index.html";
+					window.location.href = "http://localhost/Grupo-RVA-/index.html";
 				}
 			}
 		});
@@ -110,7 +105,7 @@ function mudarSenha(token){
 					if(data.status = 's'){
 						$("#dOverlay").hide();
 						$("#dOverlay").html();
-						window.location.href = "http://localhost/index.html";
+						window.location.href = "http://localhost/Grupo-RVA-/index.html";
 					}
 				}
 			});
@@ -303,7 +298,7 @@ function funcaoClique(){
 				$("#formRespostaId").removeClass("form-correto");
 				if(data.status == "s"){
 					$("#formRespostaId").addClass("form-correto");
-					window.location.href = "http://localhost/index.html";
+					window.location.href = "http://localhost/Grupo-RVA-/index.html";
 				}
 				$("#formRespostaId").html(data.mensagem);
 			}
