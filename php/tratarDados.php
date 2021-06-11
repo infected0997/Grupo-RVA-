@@ -8,7 +8,7 @@
 
     // Funcao para mandar email
     function funcEmail($destino, $titulo, $mensagem){
-        include 'enviarEmail.php';
+        //include 'enviarEmail.php';
     }
 
     // Funcao para autenticar email da conta
@@ -215,6 +215,27 @@
 
     // ~~ CODIGO PRINCIPAL ~~ // 
 
+    // Se for nulo, manda a chave publica para o user
+    if($_POST == null){
+        $chaveB64 = implode(file("../certificado/publica.key"));
+        $retorno["chave"] = $chaveB64;
+        $retorno["hash"] = md5($chaveB64);
+        echo json_encode($retorno);
+        exit;
+    }
+    // Checa se tem a chave secreta
+    if(!isset($_SESSION['chaveSecreta'])){
+        $dados = $_POST["dados"];
+        $dadosH = $_POST["hashDados"];
+
+	    $chave_privada = file_get_contents("../certificado/server.key");
+
+	    openssl_private_decrypt(base64_decode($dados), $mensagem_descriptografada, $chave_privada, OPENSSL_ZERO_PADDING);
+
+        $_SESSION['chaveSecreta'] = $mensagem_descriptografada;
+	    echo $mensagem_descriptografada;
+        exit;
+    }
     // Checa o tipo de funcao que deve ser chamada
     $tipo = $_POST['tipo'];
     if($tipo == 'cadastro'){

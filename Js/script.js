@@ -1,13 +1,100 @@
 var loc = window.location.pathname;
+var chavePub = null;
+var chaveSec = null;
 $(document).ready(function(){
-
-	// Checa se esta no index para rodar a autenticacao por token
-	if(loc.substring(loc.lastIndexOf('/')+1, loc.lastIndexOf('/')+10) == "auth.html"){
+	// Obtem a chave publica do server
+	chavePub = getCookie();
+	if(chavePub == null){
+		solicitarChave();
+	}
+	chavePub = atob(chavePub);
+	defChaveSec();
+	// Checa se esta na pagina para rodar a autenticacao por token
+	if(loc.substring(loc.lastIndexOf('/')+1, loc.lastIndexOf('/')+10) == "auth.html"){	
 		autenticarCadastro();
 	}
 	prepararPagina();
 	funcaoClique();
 });
+
+// Funcao definir chave secreta
+function defChaveSec(){
+	// Gera uma chave privada e vetor de inicializacao
+	chaveSec = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.random(32)).toString();
+	var iv_random = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.random(16)).toString();
+	console.log(chaveSec);
+	console.log(iv_random);
+
+	// Cria o pacote com os dados e o hash dele
+    var data = {"chave": chaveSec, "iv": iv_random};
+    var valores = JSON.stringify(data);
+	var dataHash = CryptoJS.MD5(valores).toString();
+    console.log("dados: " + valores);
+
+    // cria um objeto da classe JSEncrypt
+    var criptografia = new JSEncrypt();
+    // adiciona a chave pública ao objeto
+    criptografia.setKey(chavePub);
+
+    // Realiza a criptografia
+    var mensagem_criptografada = criptografia.encrypt(valores);
+    console.log(mensagem_criptografada);
+
+	// Manda os dados e o hash dele
+    $.ajax({
+        url: "/Grupo-RVA-/php/tratarDados.php", 
+        type: 'post', 
+        data: {dados: mensagem_criptografada,
+			   hashDados: dataHash
+			}, 
+        dataType: "json"
+    });
+}
+
+// Funcao pega cookie
+function getCookie(){
+	// Pega o cookie e o divide em um array
+	var cookie = decodeURIComponent(document.cookie);
+	var co = cookie.split(';');
+	var i;
+	var nome = "ChaveRVA=";
+	for(i = 0; i < co.length; i++) {
+		var c = co[i];
+		// Testa se o primeiro caractere esta vazio
+		while (c.charAt(0) == ' ') {
+			c = c.substring(1);
+		}
+		// Testa se o cookie e igual ao que esta procurando, e retorna o valor
+		if (c.indexOf(nome) == 0) {
+			return c.substring(nome.length, c.length);
+		}
+	}
+	return null;
+}
+
+// Funcao para pedir chave publica
+function solicitarChave(){
+	// Solicita a chave publica do server
+	$.ajax({
+		type: "POST",
+		dataType: "json",
+		url: "/Grupo-RVA-/php/tratarDados.php",
+		async: false,
+		data: {},
+		// Caso sucesso volta com a chave e hash
+		success: function(data) {
+			// compara o hash com o hash da chave
+			if(data.hash == CryptoJS.MD5(data.chave).toString()){
+				var ch = btoa(data.chave);
+				document.cookie = "ChaveRVA="+ch+";expires=; path=/";
+				chavePub = ch;
+			}
+			else{
+				solicitarChave();
+			}
+		}
+	});
+}
 
 // Funcao para preparar as paginas
 function prepararPagina(){
