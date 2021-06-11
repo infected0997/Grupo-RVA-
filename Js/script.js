@@ -1,6 +1,7 @@
 var loc = window.location.pathname;
 var chavePub = null;
 var chaveSec = null;
+var iVetor = null;
 $(document).ready(function(){
 	// Obtem a chave publica do server e coloca em cookie
 	chavePub = getCookie("ChaveRVA=");
@@ -9,12 +10,16 @@ $(document).ready(function(){
 	}
 	chavePub = atob(chavePub);
 
-	// Define uma chave privada e coloca em cookie
+	// Define uma chave privada e vetor de inicializacao e os coloca em cookies
 	chaveSec = getCookie("ChaveSec=");
+	iVetor = getCookie("iv=");
 	if(chaveSec == null){
 		defChaveSec();
-	} else{chaveSec = atob(chaveSec);}
-
+	} else{
+		chaveSec = atob(chaveSec);
+		iVetor = atob(iVetor);
+	}
+	console.log(iVetor);
 	// Checa se esta na pagina auth para rodar a autenticacao por token
 	if(loc.substring(loc.lastIndexOf('/')+1, loc.lastIndexOf('/')+10) == "auth.html"){	
 		autenticarCadastro();
@@ -23,16 +28,43 @@ $(document).ready(function(){
 	funcaoClique();
 });
 
+// Funcao criptografar simetrica
+function enCripto(data){
+	// vetor de inicialização
+    var iv = CryptoJS.enc.Utf8.parse(iVetor);
+    console.log("vator de inicialização: " + iv);
+
+    // converte para JSON e cria um hash
+    var valores = JSON.stringify(data);
+	var hashData = CryptoJS.MD5(valores).toString();
+    // Converte para ut8 e após, para base64
+    valores = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(valores)).toString();
+    console.log("valores base64: " + valores);
+
+    // criptografa a mensagem
+    // https://cryptojs.gitbook.io/docs/
+    var criptografado = CryptoJS.AES.encrypt(valores, chaveSec, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.ZeroPadding
+    });
+ 
+    var criptografado_string = criptografado.toString();
+    console.log("mensagem criptografada: " + criptografado_string);
+
+    return Array(CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(criptografado_string)).toString(), hashData);
+}
+
 // Funcao definir chave secreta
 function defChaveSec(){
 	// Gera uma chave privada e vetor de inicializacao
 	chaveSec = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.random(32)).toString();
-	var iv_random = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.random(16)).toString();
+	iVetor = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.random(16)).toString();
 	console.log(chaveSec);
-	console.log(iv_random);
+	console.log(iVetor);
 
 	// Cria o pacote com os dados e o hash dele
-    var data = {"chave": chaveSec, "iv": iv_random};
+    var data = {"chave": chaveSec, "iv": iVetor};
     var valores = JSON.stringify(data);
 	var dataHash = CryptoJS.MD5(valores).toString();
     console.log("dados: " + valores);
@@ -57,7 +89,9 @@ function defChaveSec(){
         dataType: "json",
 		success: function(data) {
 			secKey = btoa(chaveSec);
+			vetorIni = btoa(iVetor);
 			document.cookie = "ChaveSec="+secKey+";expires=; path=/";
+			document.cookie = "iv="+vetorIni+";expires=; path=/";
 		}
     });
 }
@@ -108,13 +142,17 @@ function solicitarChave(){
 
 // Funcao para preparar as paginas
 function prepararPagina(){
-	// Manda o token de sessao para o php retornar informacoes da pagina
+	informacoes = {"tipo":'preparaUser'};
+	informacoes = enCripto(informacoes);
+	console.log(informacoes[1])
+	// Pede informacoes da pagina
 	$.ajax({
 		type: "POST",
 		dataType: "json",
 		url: "/Grupo-RVA-/php/tratarDados.php",
 		data: {
-			tipo: 'preparaUser'
+			dados: informacoes[0],
+			hashDados: informacoes[1] 
 		},
 		// Caso sucesso volta com as informacoes e forma a pagina
 		success: function(data) {
