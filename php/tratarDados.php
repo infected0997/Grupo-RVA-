@@ -213,6 +213,37 @@
         echo json_encode($retorno);
     }
 
+    // Funcao descriptografia simetrica
+    function desCripto(){
+        $dados = $_POST["dados"];
+
+        // quebra a string a partir do 32 caracter
+        $mensagem_criptografada_base64 = substr($dados, 32);
+
+        echo "Mensagem criptografada base 64: ".$mensagem_criptografada_base64."\n";
+
+        $mensagem_criptografada = base64_decode($mensagem_criptografada_base64);
+
+        echo "Mensagem criptografada: ".$mensagem_criptografada."\n";
+
+        $chave = "1234567887654321"; 
+
+        // quebra a string até o 32 caracter
+        $iv = substr($dados, 0, 32);
+
+        echo "Vetor de inicialização: ".$iv."\n";
+
+        // descriptografa a mensagem
+        $mensagem_descriptografada = openssl_decrypt($mensagem_criptografada, 'aes-128-cbc', $chave, OPENSSL_ZERO_PADDING, $iv);
+
+        print_r(json_decode(base64_decode($mensagem_descriptografada), true));
+    }
+
+    // Funcao criptografia simetrica
+    function enCripto(){
+
+    }
+
     // ~~ CODIGO PRINCIPAL ~~ // 
 
     // Se for nulo, manda a chave publica para o user
@@ -225,17 +256,27 @@
     }
     // Checa se tem a chave secreta
     if(!isset($_SESSION['chaveSecreta'])){
+        // Puxa os dados criptografados e o hash
         $dados = $_POST["dados"];
         $dadosH = $_POST["hashDados"];
 
+        // Puxa a chave privada e descriptografa a mensagem
 	    $chave_privada = file_get_contents("../certificado/server.key");
-
 	    openssl_private_decrypt(base64_decode($dados), $mensagem_descriptografada, $chave_privada, OPENSSL_ZERO_PADDING);
 
-        $_SESSION['chaveSecreta'] = $mensagem_descriptografada;
-	    echo $mensagem_descriptografada;
+        // Transforma o string da mensagem em um array legivel e joga no $_POST
+        $decriptoParametros = explode(",",$mensagem_descriptografada);
+        foreach($decriptoParametros as $parametro){
+            $separado = explode(":", str_replace(array("{", "}", '"', "'"), "", $parametro));
+            $_POST[$separado[0]] = $separado[1];
+        }
+	    $_SESSION['chaveSecreta'] = $_POST['chave'];
+        $_SESSION['vetorInicializacao'] = $_POST['iv'];
+        echo json_encode('s');
         exit;
     }
+    // Descriptografa a mensagem com a chave secreta
+
     // Checa o tipo de funcao que deve ser chamada
     $tipo = $_POST['tipo'];
     if($tipo == 'cadastro'){

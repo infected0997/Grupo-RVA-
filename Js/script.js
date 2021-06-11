@@ -2,14 +2,20 @@ var loc = window.location.pathname;
 var chavePub = null;
 var chaveSec = null;
 $(document).ready(function(){
-	// Obtem a chave publica do server
-	chavePub = getCookie();
+	// Obtem a chave publica do server e coloca em cookie
+	chavePub = getCookie("ChaveRVA=");
 	if(chavePub == null){
 		solicitarChave();
 	}
 	chavePub = atob(chavePub);
-	defChaveSec();
-	// Checa se esta na pagina para rodar a autenticacao por token
+
+	// Define uma chave privada e coloca em cookie
+	chaveSec = getCookie("ChaveSec=");
+	if(chaveSec == null){
+		defChaveSec();
+	} else{chaveSec = atob(chaveSec);}
+
+	// Checa se esta na pagina auth para rodar a autenticacao por token
 	if(loc.substring(loc.lastIndexOf('/')+1, loc.lastIndexOf('/')+10) == "auth.html"){	
 		autenticarCadastro();
 	}
@@ -42,22 +48,26 @@ function defChaveSec(){
 
 	// Manda os dados e o hash dele
     $.ajax({
-        url: "/Grupo-RVA-/php/tratarDados.php", 
+        url: "/Grupo-RVA-/php/tratarDados.php",
+		async: false, 
         type: 'post', 
         data: {dados: mensagem_criptografada,
 			   hashDados: dataHash
 			}, 
-        dataType: "json"
+        dataType: "json",
+		success: function(data) {
+			secKey = btoa(chaveSec);
+			document.cookie = "ChaveSec="+secKey+";expires=; path=/";
+		}
     });
 }
 
 // Funcao pega cookie
-function getCookie(){
+function getCookie(nome){
 	// Pega o cookie e o divide em um array
 	var cookie = decodeURIComponent(document.cookie);
 	var co = cookie.split(';');
 	var i;
-	var nome = "ChaveRVA=";
 	for(i = 0; i < co.length; i++) {
 		var c = co[i];
 		// Testa se o primeiro caractere esta vazio
