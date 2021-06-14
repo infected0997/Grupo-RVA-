@@ -41,9 +41,11 @@ function enCripto(data){
     valores = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(valores)).toString();
     console.log("valores base64: " + valores);
 
+	keyEnc = CryptoJS.enc.Utf8.parse(chaveSec); 
+
     // criptografa a mensagem
     // https://cryptojs.gitbook.io/docs/
-    var criptografado = CryptoJS.AES.encrypt(valores, chaveSec, {
+    var criptografado = CryptoJS.AES.encrypt(valores, keyEnc, {
         iv: iv,
         mode: CryptoJS.mode.CBC,
         padding: CryptoJS.pad.ZeroPadding
@@ -58,8 +60,8 @@ function enCripto(data){
 // Funcao definir chave secreta
 function defChaveSec(){
 	// Gera uma chave privada e vetor de inicializacao
-	chaveSec = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.random(32)).toString();
-	iVetor = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.random(16)).toString();
+	chaveSec = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.random(16)).toString();
+	iVetor = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.random(8)).toString();
 	console.log(chaveSec);
 	console.log(iVetor);
 
@@ -144,7 +146,6 @@ function solicitarChave(){
 function prepararPagina(){
 	informacoes = {"tipo":'preparaUser'};
 	informacoes = enCripto(informacoes);
-	console.log(informacoes[1])
 	// Pede informacoes da pagina
 	$.ajax({
 		type: "POST",
@@ -178,6 +179,8 @@ function prepararPagina(){
 function autenticarCadastro(){
 	// Pega o token da URL
 	var tokenAuth = window.location.href.split("#").pop();
+	informacoes = {"tipo":'autenticar',"token":tokenAuth};
+	informacoes = enCripto(informacoes);
 	if(tokenAuth.length == 128){
 		// Manda o token para autenticar a conta no php
 		$.ajax({
@@ -185,8 +188,8 @@ function autenticarCadastro(){
 			dataType: "json",
 			url: "../php/tratarDados.php",
 			data: {
-				tipo: 'autenticar',
-				token: tokenAuth
+				dados: informacoes[0],
+				hashDados: informacoes[1]
 			},
 			// Caso sucesso volta a pagina principal
 			success: function(data) {
@@ -223,17 +226,18 @@ function mudarSenha(token){
 			}
 
 			// Transforma a senha em hash
-			senha = $.MD5(senha);
+			senha = $.MD5(senha+"aexh452");
 
+			informacoes = {"tipo":'mudancaSenha+',"novaSenha":senha,"tokenA":token};
+			informacoes = enCripto(informacoes);
 			// Manda o formulario para o php buscar os dados no banco
 			$.ajax({
 				type: "POST",
 				dataType: "json",
 				url: "../php/tratarDados.php",
 				data: {
-					tipo: 'mudancaSenha',
-					novaSenha: senha,
-					tokenA: token
+					dados: informacoes[0],
+					hashDados: informacoes[1]
 				},
 				// Se a mudança der certo, volta para o index
 				success: function(data) {
@@ -287,14 +291,16 @@ function funcaoClique(){
 		$("#botaoRecuperarId").click(function(){
 			var nomeEmail = $("#emailRecuperarId").val();
 
+			informacoes = {"tipo":'recuperarConta',"email":nomeEmail};
+			informacoes = enCripto(informacoes);
 			// Manda o formulario para o php buscar os dados no banco
 			$.ajax({
 				type: "POST",
 				dataType: "json",
 				url: "../php/tratarDados.php",
 				data: {
-					tipo: 'recuperarConta',
-					email: nomeEmail
+					dados: informacoes[0],
+					hashDados: informacoes[1]
 				},
 				// Esconde o overlay
 				success: function(data) {
@@ -367,19 +373,19 @@ function funcaoClique(){
 		}
 
 		// Transforma a senha em hash
-		aux[3] = $.MD5(aux[3]);
+		aux[3] = $.MD5(aux[3]+"aexh452");
 
+
+		informacoes = {"tipo":'cadastro',"nome":aux[0],"email":aux[1],"dataNascimento":aux[2],"senha":aux[3]};
+		informacoes = enCripto(informacoes);
 		// Manda o formulario para o php de tratamento de dados
 		$.ajax({
 			type: "POST",
 			dataType: "json",
 			url: "../php/tratarDados.php",
 			data: {
-				tipo: 'cadastro',
-				nome: aux[0],
-				email: aux[1],
-				dataNascimento: aux[2],
-				senha: aux[3]
+				dados: informacoes[0],
+				hashDados: informacoes[1]
 			},
 			// Imprime mensagem de sucesso ou falha
 			success: function(data) {
@@ -416,17 +422,18 @@ function funcaoClique(){
 		if(testeCad){return;}
 
 		// Transforma a senha em hash
-		aux[1] = $.MD5(aux[1]);
+		aux[1] = $.MD5(aux[1]+"aexh452");
 
+		informacoes = {"tipo":'login',"nome":aux[0],"senha":aux[1]};
+		informacoes = enCripto(informacoes);
 		// Manda o formulario para o php buscar os dados no banco
 		$.ajax({
 			type: "POST",
 			dataType: "json",
 			url: "../php/tratarDados.php",
 			data: {
-				tipo: 'login',
-				nome: aux[0],
-				senha: aux[1]
+				dados: informacoes[0],
+				hashDados: informacoes[1]
 			},
 			// Imprime mensagem de sucesso ou falha
 			success: function(data) {

@@ -76,7 +76,7 @@
                    "<a href=$linque>Link</a></p>";
 
             // Manda o Email
-            funcEmail($email, $title, $msg);
+            //funcEmail($email, $title, $msg);
 
             // Manda a mensagem de sucesso
             $retorno["status"] = "s";
@@ -217,22 +217,21 @@
     function desCripto(){
         $dados = $_POST["dados"];
 
-        echo "Mensagem criptografada base 64: ".$dados."\n";
-
         $mensagem_criptografada = base64_decode($dados);
 
-        echo "Mensagem criptografada: ".$mensagem_criptografada."\n";
-
-        // quebra a string até o 32 caracter
-        $iv = substr($dados, 0, 32);
-
-        echo "Vetor de inicialização: ".$iv."\n";
-
         // descriptografa a mensagem
-        $mensagem_descriptografada = openssl_decrypt($mensagem_criptografada, 'aes-256-cbc', $_SESSION['chaveSecreta'], OPENSSL_ZERO_PADDING, $_SESSION['vetorInicializacao']);
+        $iv = $_SESSION['vetorInicializacao'];
+        $keyEnc = $_SESSION['chaveSecreta'];
+        $mensagem_descriptografada = openssl_decrypt($mensagem_criptografada, 'aes-256-cbc', $keyEnc, OPENSSL_ZERO_PADDING, $iv);
 
-        echo "mensagem final: ".$mensagem_descriptografada;
-        print_r(json_decode(base64_decode($mensagem_descriptografada), true));
+        $msgFinal = base64_decode($mensagem_descriptografada);
+        
+        // Transforma o string da mensagem em um array legivel e joga no $_POST
+        $decriptoParametros = explode(",",$msgFinal);
+        foreach($decriptoParametros as $parametro){
+            $separado = explode(":", str_replace(array("{", "}", '"', "'"), "", $parametro));
+            $_POST[$separado[0]] = $separado[1];
+        }
     }
 
     // Funcao criptografia simetrica
