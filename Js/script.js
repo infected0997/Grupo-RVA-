@@ -57,6 +57,36 @@ function enCripto(data){
     return Array(CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(criptografado_string)).toString(), hashData);
 }
 
+// Funcao descriptografar simetrica
+function deCripto(data){
+	// Chave e IV
+	var iv = CryptoJS.enc.Utf8.parse(iVetor);
+	keyEnc = CryptoJS.enc.Utf8.parse(chaveSec);
+
+	// Efetua a descriptografia
+	var decripto = CryptoJS.AES.decrypt(data, keyEnc, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+		padding: CryptoJS.pad.Pkcs7
+    });
+
+	// Passa a mensagem para Utf8
+	var msg = CryptoJS.enc.Utf8.stringify(decripto);
+
+	// Separa a mensagem em pares, e forma um array com seus valores originais
+	var sepPar = msg.split(';');
+	var strFinal = [];
+	var cont = 0;
+	for(cont = 0; cont < sepPar.length; cont++){
+		if(sepPar[cont] == ""){break;}
+		var strTemp = sepPar[cont].split(':');
+		strFinal[strTemp[0]] = strTemp[1];
+	}
+
+	console.log(strFinal);
+	return strFinal;
+}
+
 // Funcao definir chave secreta
 function defChaveSec(){
 	// Gera uma chave privada e vetor de inicializacao
@@ -150,6 +180,7 @@ function prepararPagina(){
 	$.ajax({
 		type: "POST",
 		dataType: "json",
+		async: false,
 		url: "/Grupo-RVA-/php/tratarDados.php",
 		data: {
 			dados: informacoes[0],
@@ -157,6 +188,9 @@ function prepararPagina(){
 		},
 		// Caso sucesso volta com as informacoes e forma a pagina
 		success: function(data) {
+			console.log(data);
+			data = deCripto(data);
+			console.log(data);
 			if(data.status == 'n'){
 				// Testa se o usuario esta em uma pagina indevida e joga ele para a index
 				if(loc.substring(loc.lastIndexOf('/')+1, loc.lastIndexOf('/')+50) == "user.html"){
@@ -165,7 +199,7 @@ function prepararPagina(){
 				return;
 			}
 			// Muda o login para imagem de usuario
-			$("#loginUsuario").html("<a href='http://localhost/Grupo-RVA-/pages/user.html' class='nav-link'>Usuario</a>");
+			$("#loginUsuario").html("<a href='https://rvaacademy/Grupo-RVA-/pages/user.html' class='nav-link'>Usuario</a>");
 
 			// PREPARA A PAGINA USER.HTML //
 			if(window.location.pathname == "/Grupo-RVA-/pages/user.html"){
@@ -193,6 +227,7 @@ function autenticarCadastro(){
 			},
 			// Caso sucesso volta a pagina principal
 			success: function(data) {
+				data = deCripto(data);
 				if(data.status == 's'){
 					window.location.href = "http://localhost/Grupo-RVA-/index.html";
 				}
@@ -228,7 +263,7 @@ function mudarSenha(token){
 			// Transforma a senha em hash
 			senha = $.MD5(senha+"aexh452");
 
-			informacoes = {"tipo":'mudancaSenha+',"novaSenha":senha,"tokenA":token};
+			informacoes = {"tipo":'mudancaSenha',"novaSenha":senha,"tokenA":token};
 			informacoes = enCripto(informacoes);
 			// Manda o formulario para o php buscar os dados no banco
 			$.ajax({
@@ -241,6 +276,7 @@ function mudarSenha(token){
 				},
 				// Se a mudança der certo, volta para o index
 				success: function(data) {
+					data = deCripto(data);
 					if(data.status = 's'){
 						$("#dOverlay").hide();
 						$("#dOverlay").html();
@@ -304,6 +340,7 @@ function funcaoClique(){
 				},
 				// Esconde o overlay
 				success: function(data) {
+					data = deCripto(data);
 					$("#formRespostaId").removeClass("form-correto");
 					if(data.status == "s"){
 						$("#formRespostaId").addClass("form-correto");
@@ -389,6 +426,7 @@ function funcaoClique(){
 			},
 			// Imprime mensagem de sucesso ou falha
 			success: function(data) {
+				data = deCripto(data);
 				$("#formRespostaId").removeClass("form-correto");
 				if(data.status == "s"){
 					$("#formRespostaId").addClass("form-correto");
@@ -437,10 +475,11 @@ function funcaoClique(){
 			},
 			// Imprime mensagem de sucesso ou falha
 			success: function(data) {
+				data = deCripto(data);
 				$("#formRespostaId").removeClass("form-correto");
 				if(data.status == "s"){
 					$("#formRespostaId").addClass("form-correto");
-					window.location.href = "http://localhost/Grupo-RVA-/index.html";
+					window.location.href = "https://rvaacademy/Grupo-RVA-/index.html";
 				}
 				$("#formRespostaId").html(data.mensagem);
 			}

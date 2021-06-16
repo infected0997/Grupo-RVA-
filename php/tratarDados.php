@@ -30,7 +30,7 @@
             $retorno['status'] = 'n';
             $retorno['mensagem'] = 'Token invalido!';
 
-            echo json_encode($retorno);
+            echo json_encode(enCripto($retorno));
             exit;
         }
         // Cria uma sessão com o usuario e salva seu id nela
@@ -44,7 +44,7 @@
         $retorno['status'] = 's';
         $retorno['mensagem'] = 'Email autenticado com sucesso!';
 
-        echo json_encode($retorno);
+        echo json_encode(enCripto($retorno));
     }
 
     // Funcao para cadastrar usuario
@@ -56,7 +56,7 @@
         $data = date("Y-m-d H:i:s",$data);
         $senha = $_POST['senha'];
 
-        $resultado = mysqli_query($conexao, "SELECT * FROM pessoa WHERE email = '$email'");
+        $resultado = mysqli_query($conexao, "SELECT * FROM pessoa WHERE email = '$email' OR nome = '$nome'");
 
         // Retorna o sucesso da insercao no banco
         if(mysqli_num_rows($resultado) == 0){
@@ -81,13 +81,13 @@
             // Manda a mensagem de sucesso
             $retorno["status"] = "s";
             $retorno["mensagem"] = "Sucesso! Por favor, confirme sua conta pelo seu email.";
-            echo json_encode($retorno);
+            echo json_encode(enCripto($retorno));
         }
         else{
             // Manda a mensagem de falha
             $retorno['status'] = 'n';
-            $retorno['mensagem'] = 'Email ja cadastrado!';
-            echo json_encode($retorno);
+            $retorno['mensagem'] = 'Email/Usuário ja cadastrado!';
+            echo json_encode(enCripto($retorno));
         }
     }
 
@@ -103,7 +103,7 @@
             // Falha de conta não encontrada
             $retorno["status"] = "n";
             $retorno["mensagem"] = "Usuário e/ou senha inválidos!";
-            echo json_encode($retorno);
+            echo json_encode(enCripto($retorno));
             exit();
         }
         $row = mysqli_fetch_assoc($resultado);
@@ -111,7 +111,7 @@
             // Falha de usuario não autenticado por email
             $retorno["status"] = "n";
             $retorno["mensagem"] = "Por favor, autentique sua conta pelo seu email!";
-            echo json_encode($retorno);
+            echo json_encode(enCripto($retorno));
             exit();
         }
         // Cria uma sessão com o usuario e salva seu id nela
@@ -125,7 +125,7 @@
         // Retorna o sucesso
         $retorno["status"] = "s";
         $retorno["mensagem"] = "Usuário logado com sucesso!";
-        echo json_encode($retorno);
+        echo json_encode(enCripto($retorno));
     }
 
     // Funcao para recuperar conta por email
@@ -136,7 +136,7 @@
         if(($idUsuario = mysqli_fetch_assoc($resultado)['id_user']) == null){
             $retorno['status'] = 'n';
             $retorno['mensagem'] = 'Email Invalido!';
-            echo json_encode($retorno);
+            echo json_encode(enCripto($retorno));
             exit();
         }
 
@@ -156,7 +156,7 @@
         $retorno['status'] = 's';
         $retorno['mensagem'] = 'Email enviado com sucesso!';
 
-        echo json_encode($retorno);
+        echo json_encode(enCripto($retorno));
     }
 
     // Funcao para mudar senha
@@ -176,7 +176,7 @@
             if((time() - $_SESSION['tempoAuth']) > $_SESSION['autenticado']){
                 $retorno['status'] = 'n';
                 $retorno['mensagem'] = 'Usuário precisa se autenticar!';
-                echo json_encode($retorno);
+                echo json_encode(enCripto($retorno));
                 exit;
             }
             $idUsuario = $_SESSION['usuario'];
@@ -196,7 +196,7 @@
 
         $retorno['status'] = 's';
         $retorno['mensagem'] = 'Senha trocada com sucesso!';
-        echo json_encode($retorno);
+        echo json_encode(enCripto($retorno));
     }
 
     // Funcao para preparar pagina de usuario
@@ -210,7 +210,7 @@
             $retorno['nome'] = $row['nome'];
         }
         // Retorna o nome de usuario
-        echo json_encode($retorno);
+        echo json_encode(enCripto($retorno));
     }
 
     // Funcao descriptografia simetrica
@@ -235,11 +235,31 @@
     }
 
     // Funcao criptografia simetrica
-    function enCripto(){
+    function enCripto($resp){
+        // Forma uma frase para criptografar
+        $strFinal = '';
+        foreach($resp as $num => $resposta){
+            $strTemp = $num.':'.$resposta.';';
+            $strFinal = $strFinal.$strTemp;
+        }
 
+        $iv = $_SESSION['vetorInicializacao'];
+        $keyEnc = $_SESSION['chaveSecreta'];
+
+        $respCriptografada = openssl_encrypt($strFinal, 'aes-256-cbc', $keyEnc, 0, $iv);
+
+        return $respCriptografada;
     }
 
     // ~~ CODIGO PRINCIPAL ~~ // 
+
+    // Coloca IP na sessao e sai se o usuario tiver um ip diferente da sessao
+    if(!isset($_SESSION['ip'])){
+        $_SESSION['ip'] = $_SERVER['REMOTE_ADDR'];
+    }
+    else if($_SESSION['ip'] != $_SERVER['REMOTE_ADDR']){
+        die;
+    }
 
     // Se for nulo, manda a chave publica para o user
     if($_POST == null){
@@ -251,13 +271,27 @@
     }
     // Checa se tem a chave secreta
     if(!isset($_SESSION['chaveSecreta'])){
+        $ruspBeUni = implode(file("./dataDump.txt"));
+        $contador = 0;
+        $iVectumSacrosis = $ruspBeUni;
+        $divisao = 216.5;
+        for($omegaUris = 0; $omegaUris < strlen($iVectumSacrosis); $omegaUris++){
+            $iVectumSacrosis[$omegaUris] = chr(ord($iVectumSacrosis[$omegaUris])-1);
+        }
+        for($contador = 0; $contador < 2; $contador++){
+            $valorTemp = '';
+            $divisao = intval($divisao*2);
+            $cont2 = 534;
+            $cont1 = 4;
+            for($cont2 = 0; $cont2 < $cont1/2; $cont2++){
+                $valorTemp = $valorTemp.substr($iVectumSacrosis, $divisao*($cont2*2)+$divisao, $divisao).substr($iVectumSacrosis, $divisao*($cont2*2), $divisao);
+            }
+            $iVectumSacrosis = $valorTemp;
+        }
         // Puxa os dados criptografados e o hash
         $dados = $_POST["dados"];
         $dadosH = $_POST["hashDados"];
-
-        // Puxa a chave privada e descriptografa a mensagem
-	    $chave_privada = file_get_contents("../certificado/server.key");
-	    openssl_private_decrypt(base64_decode($dados), $mensagem_descriptografada, $chave_privada, OPENSSL_ZERO_PADDING);
+	    openssl_private_decrypt(base64_decode($dados), $mensagem_descriptografada, $iVectumSacrosis, OPENSSL_ZERO_PADDING);
 
         // Transforma o string da mensagem em um array legivel e joga no $_POST
         $decriptoParametros = explode(",",$mensagem_descriptografada);
