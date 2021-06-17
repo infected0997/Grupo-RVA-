@@ -2,10 +2,11 @@ var loc = window.location.pathname;
 var chavePub = null;
 var chaveSec = null;
 var iVetor = null;
+var tempoSave = null;
 $(document).ready(function(){
 	// Obtem a chave publica do server e coloca em cookie
 	chavePub = getCookie("ChaveRVA=");
-	if(chavePub == null){
+	if(chavePub == null || chavePub == ""){
 		solicitarChave();
 	}
 	chavePub = atob(chavePub);
@@ -13,33 +14,77 @@ $(document).ready(function(){
 	// Define uma chave privada e vetor de inicializacao e os coloca em cookies
 	chaveSec = getCookie("ChaveSec=");
 	iVetor = getCookie("iv=");
-	if(chaveSec == null){
+	tempoSave = getCookie("tempoAtu=");
+	if(chaveSec == null || chaveSec == ""){
 		defChaveSec();
 	} else{
 		chaveSec = atob(chaveSec);
 		iVetor = atob(iVetor);
 	}
-	console.log(iVetor);
 	// Checa se esta na pagina auth para rodar a autenticacao por token
 	if(loc.substring(loc.lastIndexOf('/')+1, loc.lastIndexOf('/')+10) == "auth.html"){	
 		autenticarCadastro();
 	}
 	prepararPagina();
 	funcaoClique();
+	trocaChave();
 });
+
+// Funcao para troca de chave secreta
+function trocaChave(){
+	if((Date.now() - tempoSave) < 300*1000){
+		return;
+	}
+	novaSec = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.random(16)).toString();
+	novoVetor = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.random(8)).toString();
+
+	// Cria o pacote com os dados
+    var data = {"chave": novaSec, "iv": novoVetor};
+    var valores = JSON.stringify(data);
+
+    // cria um objeto da classe JSEncrypt
+    var criptografia = new JSEncrypt();
+    // adiciona a chave pública ao objeto
+    criptografia.setKey(chavePub);
+
+    // Realiza a criptografia
+    var mensagem_criptografada = criptografia.encrypt(valores);
+
+	informacoes = {"tipo":'testando',"criptoChave":mensagem_criptografada};
+	informacoes = enCripto(informacoes);
+	// Pede informacoes da pagina
+	$.ajax({
+		type: "POST",
+		dataType: "json",
+		async: false,
+		url: "/Grupo-RVA-/php/tratarDados.php",
+		data: {
+			dados: informacoes[0],
+			hashDados: informacoes[1] 
+		},
+		success: function(data) {
+			chaveSec = novaSec;
+			iVetor = novoVetor;
+			tempoSave = Date.now();
+			secKey = btoa(novaSec);
+			vetorIni = btoa(novoVetor);
+			document.cookie = "tempoAtu="+tempoSave+";expires=; path=/";
+			document.cookie = "ChaveSec="+secKey+";expires=; path=/";
+			document.cookie = "iv="+vetorIni+";expires=; path=/";
+		}
+	});
+}
 
 // Funcao criptografar simetrica
 function enCripto(data){
 	// vetor de inicialização
     var iv = CryptoJS.enc.Utf8.parse(iVetor);
-    console.log("vator de inicialização: " + iv);
 
     // converte para JSON e cria um hash
     var valores = JSON.stringify(data);
 	var hashData = CryptoJS.MD5(valores).toString();
     // Converte para ut8 e após, para base64
     valores = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(valores)).toString();
-    console.log("valores base64: " + valores);
 
 	keyEnc = CryptoJS.enc.Utf8.parse(chaveSec); 
 
@@ -52,7 +97,6 @@ function enCripto(data){
     });
  
     var criptografado_string = criptografado.toString();
-    console.log("mensagem criptografada: " + criptografado_string);
 
     return Array(CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(criptografado_string)).toString(), hashData);
 }
@@ -83,7 +127,6 @@ function deCripto(data){
 		strFinal[strTemp[0]] = strTemp[1];
 	}
 
-	console.log(strFinal);
 	return strFinal;
 }
 
@@ -92,14 +135,11 @@ function defChaveSec(){
 	// Gera uma chave privada e vetor de inicializacao
 	chaveSec = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.random(16)).toString();
 	iVetor = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.random(8)).toString();
-	console.log(chaveSec);
-	console.log(iVetor);
 
 	// Cria o pacote com os dados e o hash dele
     var data = {"chave": chaveSec, "iv": iVetor};
     var valores = JSON.stringify(data);
 	var dataHash = CryptoJS.MD5(valores).toString();
-    console.log("dados: " + valores);
 
     // cria um objeto da classe JSEncrypt
     var criptografia = new JSEncrypt();
@@ -108,7 +148,6 @@ function defChaveSec(){
 
     // Realiza a criptografia
     var mensagem_criptografada = criptografia.encrypt(valores);
-    console.log(mensagem_criptografada);
 
 	// Manda os dados e o hash dele
     $.ajax({
@@ -120,8 +159,10 @@ function defChaveSec(){
 			}, 
         dataType: "json",
 		success: function(data) {
+			tempoSave = Date.now();
 			secKey = btoa(chaveSec);
 			vetorIni = btoa(iVetor);
+			document.cookie = "tempoAtu="+tempoSave+";expires=; path=/";
 			document.cookie = "ChaveSec="+secKey+";expires=; path=/";
 			document.cookie = "iv="+vetorIni+";expires=; path=/";
 		}
@@ -188,14 +229,20 @@ function prepararPagina(){
 		},
 		// Caso sucesso volta com as informacoes e forma a pagina
 		success: function(data) {
-			console.log(data);
 			data = deCripto(data);
-			console.log(data);
 			if(data.status == 'n'){
 				// Testa se o usuario esta em uma pagina indevida e joga ele para a index
 				if(loc.substring(loc.lastIndexOf('/')+1, loc.lastIndexOf('/')+50) == "user.html"){
-					window.location.href = "http://localhost/Grupo-RVA-/index.html";
+					window.location.href = "https://rvaacademy/Grupo-RVA-/index.html";
 				}
+				return;
+			}
+			// Se a sessao for expirada
+			if(data.status == 'e'){
+				document.cookie = "tempoAtu=;expires=; path=/";
+				document.cookie = "ChaveSec=;expires=; path=/";
+				document.cookie = "iv=;expires=; path=/";
+				window.location.href = "https://rvaacademy/Grupo-RVA-/index.html";
 				return;
 			}
 			// Muda o login para imagem de usuario
@@ -229,7 +276,7 @@ function autenticarCadastro(){
 			success: function(data) {
 				data = deCripto(data);
 				if(data.status == 's'){
-					window.location.href = "http://localhost/Grupo-RVA-/index.html";
+					window.location.href = "https://rvaacademy/Grupo-RVA-/index.html";
 				}
 			}
 		});
@@ -277,10 +324,18 @@ function mudarSenha(token){
 				// Se a mudança der certo, volta para o index
 				success: function(data) {
 					data = deCripto(data);
-					if(data.status = 's'){
+					console.log(data);
+					if(data.status == 's'){
 						$("#dOverlay").hide();
 						$("#dOverlay").html();
-						window.location.href = "http://localhost/Grupo-RVA-/index.html";
+						document.cookie = "tempoAtu=;expires=; path=/";
+						document.cookie = "ChaveSec=;expires=; path=/";
+						document.cookie = "iv=;expires=; path=/";
+						window.location.href = "https://rvaacademy/Grupo-RVA-/index.html";
+					}
+					else{
+						$("#dOverlay").hide();
+						$("#dOverlay").html();
 					}
 				}
 			});
@@ -291,6 +346,7 @@ function mudarSenha(token){
 function funcaoClique(){
 	// Funcao clique para formatar a pagina para cadastro
 	$("#formularioCadastroId").click(function(){
+		trocaChave();
 		var form =  '<tr><td><h1>Cadastro</h1></td></tr>'+
 					'<tr><td><input type="text" id="usuarioId" placeholder="Nome de usuario"></td></tr>'+
 	      			'<tr><td><input type="email" id="emailId" placeholder="E-mail"></td></tr>'+
@@ -307,11 +363,13 @@ function funcaoClique(){
 
 	// Funcao clique para formatar a pagina para login
 	$("#formularioLoginId").click(function(){
+		trocaChave();
 		document.location.reload(true);
 	});
 
 	// Funcao clique esqueceu a senha
 	$("#esqueciSenhaId").click(function(){
+		trocaChave();
 		var over =  '<div class="caixa-overlay"><div class="table-overlay">'+
 					'<table><tr><td colspan="2"><h4 class="alinha-texto-centro">Insira seu email abaixo</h4></td></tr>'+
 					'<tr><td colspan="2"><input type="email" id="emailRecuperarId" placeholder="Endereco de email da conta"></td></tr>'+
@@ -325,6 +383,7 @@ function funcaoClique(){
 
 		// Manda o nome de email para o php
 		$("#botaoRecuperarId").click(function(){
+			trocaChave();
 			var nomeEmail = $("#emailRecuperarId").val();
 
 			informacoes = {"tipo":'recuperarConta',"email":nomeEmail};
@@ -355,11 +414,13 @@ function funcaoClique(){
 
 	// Funcao de clique chamar alteracao de senha
 	$("#alterarSenhaId").click(function(){
+		trocaChave();
 		mudarSenha(null);
 	});
 
 	// Funcao de clique de cadastro
 	$("#botaoCadastroId").click(function(){
+		trocaChave();
 
 		// Definicao de variaveis auxiliares e limpeza do texto de erro
 		var form = ["#usuarioId", "#emailId", "#dataId", "#senhaId", "#confSenhaId"];
@@ -439,6 +500,7 @@ function funcaoClique(){
 
 	// Funcao de clique de login
 	$("#botaoLoginId").click(function(){
+		trocaChave();
 
 		// Definicao de variaveis auxiliares e limpeza do texto de erro
 		var form = ["#usuarioId", "#senhaId"];

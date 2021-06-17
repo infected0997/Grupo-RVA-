@@ -7,15 +7,7 @@
         $segundos = time() - $_SESSION['tempo'];
 
         if($segundos > $_SESSION['sessao']){
-            unset($_SESSION['usuario']);
-            unset($_SESSION['id']);
-            unset($_SESSION['tempo']);
-            unset($_SESSION['tempoAuth']);
-            unset($_SESSION['sessao']);
-            unset($_SESSION['autenticado']);
-            session_destroy();
-
-            $retorno['status'] = 'n';
+            $retorno['status'] = 'e';
             $retorno['mensagem'] = 'Sessão expirada';
         }
         else{

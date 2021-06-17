@@ -39,7 +39,7 @@
         $_SESSION['tempo'] = time();
         $_SESSION['tempoAuth'] = time();
         $_SESSION['sessao'] = 3600;
-        $_SESSION['autenticado'] = 30;
+        $_SESSION['autenticado'] = 300;
 
         $retorno['status'] = 's';
         $retorno['mensagem'] = 'Email autenticado com sucesso!';
@@ -185,18 +185,12 @@
         // Muda a senha do user
         $resultado = mysqli_query($conexao, "UPDATE pessoa SET senha = '$senha' WHERE id_user = '$idUsuario'");
 
-        // Destroi a sessao
-        unset($_SESSION['usuario']);
-        unset($_SESSION['id']);
-        unset($_SESSION['tempo']);
-        unset($_SESSION['tempoAuth']);
-        unset($_SESSION['sessao']);
-        unset($_SESSION['autenticado']);
-        session_destroy();
-
         $retorno['status'] = 's';
-        $retorno['mensagem'] = 'Senha trocada com sucesso!';
         echo json_encode(enCripto($retorno));
+
+        // Destroi a sessao
+        unset($_SESSION);
+        session_destroy();
     }
 
     // Funcao para preparar pagina de usuario
@@ -208,6 +202,12 @@
             $resultado = mysqli_query($conexao, "SELECT * FROM pessoa WHERE id_user = '$idUser'");
             $row = mysqli_fetch_assoc($resultado);
             $retorno['nome'] = $row['nome'];
+        }
+        if($retorno['status'] == 'e'){
+            echo json_encode(enCripto($retorno));
+            unset($_SESSION);
+            session_destroy();
+            exit;
         }
         // Retorna o nome de usuario
         echo json_encode(enCripto($retorno));
@@ -249,6 +249,41 @@
         $respCriptografada = openssl_encrypt($strFinal, 'aes-256-cbc', $keyEnc, 0, $iv);
 
         return $respCriptografada;
+    }
+
+    // Funcao mudar chave secreta
+    function mudarChaveSec($conexao){
+        $ruspBeUni = implode(file("./dataDump.txt"));
+        $contador = 0;
+        $iVectumSacrosis = $ruspBeUni;
+        $divisao = 216.5;
+        for($omegaUris = 0; $omegaUris < strlen($iVectumSacrosis); $omegaUris++){
+            $iVectumSacrosis[$omegaUris] = chr(ord($iVectumSacrosis[$omegaUris])-1);
+        }
+        for($contador = 0; $contador < 2; $contador++){
+            $valorTemp = '';
+            $divisao = intval($divisao*2);
+            $cont2 = 534;
+            $cont1 = 4;
+            for($cont2 = 0; $cont2 < $cont1/2; $cont2++){
+                $valorTemp = $valorTemp.substr($iVectumSacrosis, $divisao*($cont2*2)+$divisao, $divisao).substr($iVectumSacrosis, $divisao*($cont2*2), $divisao);
+            }
+            $iVectumSacrosis = $valorTemp;
+        }
+        // Puxa os dado criptografado
+        $dados = $_POST["criptoChave"];
+	    openssl_private_decrypt(base64_decode($dados), $mensagem_descriptografada, $iVectumSacrosis, OPENSSL_ZERO_PADDING);
+
+        // Transforma o string da mensagem em um array legivel e joga no $_POST
+        $decriptoParametros = explode(",",$mensagem_descriptografada);
+        foreach($decriptoParametros as $parametro){
+            $separado = explode(":", str_replace(array("{", "}", '"', "'"), "", $parametro));
+            $_POST[$separado[0]] = $separado[1];
+        }
+	    $_SESSION['chaveSecreta'] = $_POST['chave'];
+        $_SESSION['vetorInicializacao'] = $_POST['iv'];
+        echo json_encode('s');
+        exit;
     }
 
     // ~~ CODIGO PRINCIPAL ~~ // 
@@ -326,6 +361,9 @@
     }
     else if($tipo == 'mudancaSenha'){
         mudarSenha($link);
+    }
+    else if($tipo == 'testando'){
+        mudarChaveSec($link);
     }
 
     // Fecha a conexao com o banco
