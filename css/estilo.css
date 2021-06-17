@@ -26,8 +26,16 @@ body {}
     height: 165px;
 }
 
+.pad-especial{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
 .table-overlay {
-    padding: 10px;
+    padding: 0px;
 }
 
 .table-overlay table {
@@ -56,6 +64,18 @@ body {}
     opacity: 0;
 }
 
+.botaox-sair{
+    text-align: right;
+    position: relative;
+    right: 2%;
+    top: 1%;
+}
+
+.img-xfechar{
+    height: 20px;
+    cursor: pointer;
+}
+
 .alinha-texto-centro {
     text-align: center;
 }
@@ -75,6 +95,7 @@ body {}
     margin-left: 0px;
     transition-property: background-color;
     transition: 0.1s;
+    z-index: 5;
 }
 
 .botao-email:hover {
@@ -84,6 +105,32 @@ body {}
 
 .botao-email:active {
     background-color: #0846A1;
+}
+
+.botao-deletar-conta{
+    background-color: #c90000;
+    color: white;
+    position: relative;
+    left: 21%;
+    outline: none;
+    padding: 5px;
+    height: 45px;
+    width: 60%;
+    border: 0px;
+    border-radius: 3px;
+    margin: 4px;
+    margin-left: 0px;
+    transition-property: background-color;
+    transition: 0.1s;
+}
+
+.botao-deletar-conta:hover {
+    background-color: #a31d1d;
+    cursor: pointer;
+}
+
+.botao-deletar-conta:active {
+    background-color: #781414;
 }
 
 /* PAGINA INICIAL */
@@ -221,6 +268,30 @@ body {}
 .texto-nome-user {
     font-size: 32;
     margin-left: 2%;
+}
+
+.deletar-user {
+    margin-left: 15%;
+    margin-top: 20%;
+    font-size: 20;
+    text-align: middle;
+    white-space: nowrap;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: #c90000;
+    border-bottom: none;
+}
+
+.deletar-user:hover {
+    border-bottom: 1px solid #a31d1d;
+    cursor: pointer;
+    color: #a31d1d;
+}
+
+.deletar-user:active {
+    border-bottom: 1px solid #781414;
+    color: #781414;
 }
 
 .utilidades-user {

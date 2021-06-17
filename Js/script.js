@@ -287,23 +287,48 @@ function autenticarCadastro(){
 }
 
 function mudarSenha(token){
-	var over =  '<div class="caixa-overlay"><div class="table-overlay">'+
-					'<table><tr><td colspan="2"><h4 class="alinha-texto-centro">Insira uma nova senha</h4></td></tr>'+
-					'<tr><td colspan="2"><input type="password" id="novaSenhaId" placeholder="Nova senha"></td></tr>'+
-					'<tr><td colspan="2"><button id="botaoNovaSenhaId" class="botao-email">Mudar senha</td></tr>'+
-					'<tr><td id="formRespostaId" class="form-erro"></td></tr>'+
-			  		'</table></div></div>';
+	var over =  '<div class="caixa-overlay" id="caixaOverId"><div class="table-overlay"><table>'+
+				'<tr><td colspan="2" class="botaox-sair"><img src="../img/close.png" class="img-xfechar" alt="..." id="fechaOverlayId"></td></tr>'+
+				'<tr><td colspan="2"><h4 class="alinha-texto-centro">Insira uma nova senha</h4></td></tr>'+
+				'<tr><td colspan="2" class="pad-especial"><input type="password" id="novaSenhaId" placeholder="Nova senha"></td></tr>'+
+				'<tr><td colspan="2"><button id="botaoNovaSenhaId" class="botao-email">Mudar senha</td></tr>'+
+				'<tr><td id="formRespostaId" class="form-erro"></td></tr>'+
+				'</table></div></div>';
 		
 		// Ativa o overlay
 		$("#dOverlay").html(over);
+		$("#caixaOverId").css("height", "210px");
 		$("#dOverlay").show();
+
+		// Fecha a janela
+		$("#fechaOverlayId").click(function(){
+			$("#dOverlay").hide();
+			$("#dOverlay").html();
+		});
 
 		// Manda a nova senha para o php
 		$("#botaoNovaSenhaId").click(function(){
 			var senha = $("#novaSenhaId").val();
 
+			var testeCad = false;
 			// Testa se a senha tem 8 caracteres e letras minusculas e maiuscula
 			if(senha.length < 12 || senha == senha.toLowerCase() || senha == senha.toUpperCase()){
+				testeCad = true;
+			}
+
+			var testeSimbolo = "!@#$%^&*";
+			var simboloTodos = true;
+			for(cont = 0; cont < testeSimbolo.length; cont++){
+				if(senha.indexOf(testeSimbolo.charAt(cont)) != -1){
+					simboloTodos = false;
+					break;
+				}
+			}
+			if(testeCad || simboloTodos){
+				$("#novaSenhaId").addClass("erro-login");
+				$("#novaSenhaId").val("");
+				$("#formRespostaId").css("background-color", "white");
+				$("#formRespostaId").html("Senha precisa ter no mínimo 12 caracteres, letras maiúsculas e minúsculas, e 1 simbolo!");
 				return;
 			}
 
@@ -333,10 +358,8 @@ function mudarSenha(token){
 						document.cookie = "iv=;expires=; path=/";
 						window.location.href = "https://rvaacademy/Grupo-RVA-/index.html";
 					}
-					else{
-						$("#dOverlay").hide();
-						$("#dOverlay").html();
-					}
+					$("#formRespostaId").css("background-color", "white");
+					$("#formRespostaId").html(data.mensagem);
 				}
 			});
 		});
@@ -371,8 +394,9 @@ function funcaoClique(){
 	$("#esqueciSenhaId").click(function(){
 		trocaChave();
 		var over =  '<div class="caixa-overlay"><div class="table-overlay">'+
-					'<table><tr><td colspan="2"><h4 class="alinha-texto-centro">Insira seu email abaixo</h4></td></tr>'+
-					'<tr><td colspan="2"><input type="email" id="emailRecuperarId" placeholder="Endereco de email da conta"></td></tr>'+
+					'<table><tr><td colspan="2" class="botaox-sair"><img src="../img/close.png" class="img-xfechar" alt="..." id="fechaOverlayId"></td></tr>'+
+					'<tr><td colspan="2"><h4 class="alinha-texto-centro">Insira seu email abaixo</h4></td></tr>'+
+					'<tr><td colspan="2" class="pad-especial"><input type="email" id="emailRecuperarId" placeholder="Endereco de email da conta"></td></tr>'+
 					'<tr><td colspan="2"><button id="botaoRecuperarId" class="botao-email">Recuperar Senha</td></tr>'+
 					'<tr><td id="formRecEmailId" class="form-erro"></td></tr>'+
 			  		'</table></div></div>';
@@ -380,6 +404,12 @@ function funcaoClique(){
 		// Ativa o overlay
 		$("#dOverlay").html(over);
 		$("#dOverlay").show();
+
+		// Fecha a janela
+		$("#fechaOverlayId").click(function(){
+			$("#dOverlay").hide();
+			$("#dOverlay").html();
+		});
 
 		// Manda o nome de email para o php
 		$("#botaoRecuperarId").click(function(){
@@ -416,6 +446,70 @@ function funcaoClique(){
 	$("#alterarSenhaId").click(function(){
 		trocaChave();
 		mudarSenha(null);
+	});
+
+	// Funcao deletar conta
+	$("#deletarContaId").click(function(){
+		trocaChave();
+		var over =  '<div class="caixa-overlay" id="caixaOverId"><div class="table-overlay">'+
+					'<table>'+
+            		'<tr><td colspan="2" class="botaox-sair"><img src="../img/close.png" class="img-xfechar" alt="..." id="fechaOverlayId"></td></tr>'+
+            		'<tr><td colspan="2"><h4 class="alinha-texto-centro">Confirme sua senha</h4></td></tr>'+
+					'<tr><td colspan="2" class="pad-especial"><input type="password" id="senhaDeletarContaId" placeholder="Senha"></td></tr>'+
+					'<tr><td colspan="2"><button id="botaoDeletarId" class="botao-deletar-conta">Deletar Conta</td></tr>'+
+					'<tr><td id="formRespostaDelId" class="form-erro"></td></tr>'+
+					'</table></div></div>';
+
+		// Ativa o overlay
+		$("#dOverlay").html(over);
+		$("#caixaOverId").css("height", "210px");
+		$("#dOverlay").show();
+
+		// Fecha a janela
+		$("#fechaOverlayId").click(function(){
+			$("#dOverlay").hide();
+			$("#dOverlay").html();
+		});
+
+		// Manda a senha para o php
+		$("#botaoDeletarId").click(function(){
+			trocaChave();
+			var senha = $("#senhaDeletarContaId").val();
+			// Testa se a senha tem caracteres
+			if(senha.length < 12 || senha == senha.toLowerCase() || senha == senha.toUpperCase()){
+				$("#formRespostaDelId").css("background-color", "white");
+				$("#formRespostaDelId").html("Por favor, digite uma senha válida.");
+				return;
+			}
+			var senhamd5 = $.MD5(senha+"aexh452");
+
+			informacoes = {"tipo":'deletarConta',"senha":senhamd5};
+			informacoes = enCripto(informacoes);
+			// Manda o formulario para o php buscar os dados no banco
+			$.ajax({
+				type: "POST",
+				dataType: "json",
+				url: "../php/tratarDados.php",
+				data: {
+					dados: informacoes[0],
+					hashDados: informacoes[1]
+				},
+				// Esconde o overlay
+				success: function(data) {
+					data = deCripto(data);
+					if(data.status == 's'){
+						document.cookie = "tempoAtu=;expires=; path=/";
+						document.cookie = "ChaveSec=;expires=; path=/";
+						document.cookie = "iv=;expires=; path=/";
+						$("#dOverlay").hide();
+						$("#dOverlay").html();
+						window.location.href = "https://rvaacademy/Grupo-RVA-/index.html";
+					}
+					$("#formRespostaDelId").css("background-color", "white");
+					$("#formRespostaDelId").html(data.mensagem);
+				}
+			});
+		});
 	});
 
 	// Funcao de clique de cadastro

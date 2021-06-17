@@ -251,6 +251,29 @@
         return $respCriptografada;
     }
 
+    // Funcao que deleta conta
+    function deletaConta($conexao){
+        $idUser = $_SESSION['usuario'];
+        $resultado = mysqli_query($conexao, "SELECT * FROM pessoa WHERE id_user = '$idUser'");
+        $row = mysqli_fetch_assoc($resultado);
+        $senhaB = $row['senha'];
+        if($senhaB == $_POST['senha']){
+            $idUser = $_SESSION['usuario'];
+            $resultado = mysqli_query($conexao, "DELETE FROM pessoa WHERE id_user = '$idUser'");
+            $resultado = mysqli_query($conexao, "DELETE FROM seguranca WHERE id_user = '$idUser'");
+            $retorno['status'] = 's';
+            $retorno['mensagem'] = 'Conta deletada!';
+            echo json_encode(enCripto($retorno));
+            unset($_SESSION);
+            session_destroy();
+            exit;
+        }
+        $retorno['status'] = 'n';
+        $retorno['mensagem'] = 'Senha incorreta!';
+        echo json_encode(enCripto($retorno));
+        exit;
+    }
+
     // Funcao mudar chave secreta
     function mudarChaveSec($conexao){
         $ruspBeUni = implode(file("./dataDump.txt"));
@@ -364,6 +387,9 @@
     }
     else if($tipo == 'testando'){
         mudarChaveSec($link);
+    }
+    else if($tipo == 'deletarConta'){
+        deletaConta($link);
     }
 
     // Fecha a conexao com o banco

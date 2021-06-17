@@ -39,4 +39,12 @@
 		token_senha VARCHAR(64) ,
 		PRIMARY KEY(id_user))");
 
+	// Cria a table cartao
+	$resultado = mysqli_query($link, "CREATE TABLE IF NOT EXISTS cartao(
+		id_user INT(4)  NOT NULL,
+		nome VARCHAR(64) ,
+		numero VARCHAR(20) ,
+		CVV VARCHAR(3) ,
+		FOREIGN KEY(id_user))");
+
 ?>
