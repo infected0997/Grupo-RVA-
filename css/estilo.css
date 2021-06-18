@@ -134,6 +134,8 @@ body {}
 }
 
 /* PAGINA INICIAL */
+.botao-redi{}
+
 .fundo-preto{
     box-shadow: 1px 1px 5px gray;
 }
@@ -292,6 +294,28 @@ body {}
 .deletar-user:active {
     border-bottom: 1px solid #781414;
     color: #781414;
+}
+
+.cartoes-user{
+    margin-left: 15%;
+}
+
+.cartao{
+    font-size: 20px;
+    margin-left: 5%;
+    text-decoration: none;
+}
+
+.cartao:hover{
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.add-cartao{
+}
+.add-cartao:hover{
+    font-weight: 500;
+    cursor: pointer;
 }
 
 .utilidades-user {

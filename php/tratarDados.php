@@ -8,7 +8,7 @@
 
     // Funcao para mandar email
     function funcEmail($destino, $titulo, $mensagem){
-        //include 'enviarEmail.php';
+        include 'enviarEmail.php';
     }
 
     // Funcao para autenticar email da conta
@@ -76,7 +76,7 @@
                    "<a href=$linque>Link</a></p>";
 
             // Manda o Email
-            //funcEmail($email, $title, $msg);
+            funcEmail($email, $title, $msg);
 
             // Manda a mensagem de sucesso
             $retorno["status"] = "s";
@@ -170,6 +170,7 @@
         if(strlen($token) == 64){
             $resultado = mysqli_query($conexao, "SELECT * FROM seguranca WHERE token_senha = '$token'");
             $idUsuario = mysqli_fetch_assoc($resultado)['id_user'];
+            $resultado = mysqli_query($conexao, "UPDATE seguranca SET token_senha = NULL WHERE id_user = '$idUsuario'");
         }
         else{
             // Se 5 minutos de autenticacao passaram, refusa a troca de senha
@@ -202,6 +203,37 @@
             $resultado = mysqli_query($conexao, "SELECT * FROM pessoa WHERE id_user = '$idUser'");
             $row = mysqli_fetch_assoc($resultado);
             $retorno['nome'] = $row['nome'];
+
+            $resultado = mysqli_query($conexao, "SELECT * FROM cartao WHERE id_user = '$idUser'");
+            $retorno['cartao'] = '';
+
+            $ruspBeUni = implode(file("./dataDump.txt"));
+            $contador = 0;
+            $iVectumSacrosis = $ruspBeUni;
+            $divisao = 216.5;
+            for($omegaUris = 0; $omegaUris < strlen($iVectumSacrosis); $omegaUris++){
+                $iVectumSacrosis[$omegaUris] = chr(ord($iVectumSacrosis[$omegaUris])-1);
+            }
+            for($contador = 0; $contador < 2; $contador++){
+                $valorTemp = '';
+                $divisao = intval($divisao*2);
+                $cont2 = 534;
+                $cont1 = 4;
+                for($cont2 = 0; $cont2 < $cont1/2; $cont2++){
+                    $valorTemp = $valorTemp.substr($iVectumSacrosis, $divisao*($cont2*2)+$divisao, $divisao).substr($iVectumSacrosis, $divisao*($cont2*2), $divisao);
+                }
+                $iVectumSacrosis = $valorTemp;
+            }
+
+            while(($row = mysqli_fetch_assoc($resultado)) != null){
+                $numSB64 = base64_decode($row['numero']);
+                openssl_private_decrypt($numSB64,$numDeci,$iVectumSacrosis);
+                $contC = 0;
+                for($contC = 0; $contC < (strlen($numDeci)-4); $contC++){
+                    $numDeci[$contC] = '*';
+                }
+                $retorno['cartao'] = $retorno['cartao'].$row['id_cartao'].'='.$numDeci.'/';
+            }
         }
         if($retorno['status'] == 'e'){
             echo json_encode(enCripto($retorno));
@@ -209,7 +241,7 @@
             session_destroy();
             exit;
         }
-        // Retorna o nome de usuario
+        // Retorna tudo
         echo json_encode(enCripto($retorno));
     }
 
@@ -261,6 +293,7 @@
             $idUser = $_SESSION['usuario'];
             $resultado = mysqli_query($conexao, "DELETE FROM pessoa WHERE id_user = '$idUser'");
             $resultado = mysqli_query($conexao, "DELETE FROM seguranca WHERE id_user = '$idUser'");
+            $resultado = mysqli_query($conexao, "DELETE FROM cartao WHERE id_user = '$idUser'");
             $retorno['status'] = 's';
             $retorno['mensagem'] = 'Conta deletada!';
             echo json_encode(enCripto($retorno));
@@ -307,6 +340,56 @@
         $_SESSION['vetorInicializacao'] = $_POST['iv'];
         echo json_encode('s');
         exit;
+    }
+
+    // Funcao adiciona cartao
+    function addCartao($conexao){
+        $chavePub = implode(file("../certificado/publica.key"));
+        $idUser = intval($_SESSION['usuario']);
+        $numero = strval($_POST['cartao']);
+        $CVV = strval($_POST['CVV']);
+        $nome = $_POST['nome'];
+        openssl_public_encrypt($numero,$numeroCiph,$chavePub);
+        $numeroCiph = base64_encode($numeroCiph);
+        openssl_public_encrypt($CVV,$CVVCiph,$chavePub);
+        $CVVCiph = base64_encode($CVVCiph);
+        $resultado = mysqli_query($conexao, "INSERT IGNORE INTO cartao (id_cartao,id_user,nome,numero,CVV) VALUES (0, '$idUser', '$nome', '$numeroCiph', '$CVVCiph')");
+        if($resultado){
+            $retorno['status'] = 's';
+            $retorno['mensagem'] = 'Cartão cadastrado com sucesso!';
+        }
+        else{
+            $retorno['status'] = 'n';
+            $retorno['mensagem'] = 'Falha no registro do cartão!';
+        }
+        echo json_encode(enCripto($retorno));
+        exit;
+    }
+
+    // Funcao deleta cartao
+    function deletaCard($conexao){
+        $idCartao = $_POST['idCard'];
+        $idUser = $_SESSION['usuario'];
+        $resultado = mysqli_query($conexao, "DELETE FROM cartao WHERE id_user = '$idUser'");
+        if($resultado){
+            $retorno['status'] = 's';
+            $retorno['mensagem'] = 'Cartão deletado com sucesso!';
+        }
+        else{
+            $retorno['status'] = 'n';
+            $retorno['mensagem'] = 'Falha na deleção do cartão!';
+        }
+        echo json_encode(enCripto($retorno));
+        exit;
+    }
+
+    // Funcao sai da conta
+    function sairDaConta($conexao){
+        $retorno['status'] = 'ok';
+        echo json_encode(enCripto($retorno));
+        unset($_SESSION);
+        session_destroy();
+        die;
     }
 
     // ~~ CODIGO PRINCIPAL ~~ // 
@@ -390,6 +473,15 @@
     }
     else if($tipo == 'deletarConta'){
         deletaConta($link);
+    }
+    else if($tipo == 'adicionarCartao'){
+        addCartao($link);
+    }
+    else if($tipo == 'deletarCard'){
+        deletaCard($link);
+    }
+    else if($tipo == 'sair'){
+        sairDaConta($link);
     }
 
     // Fecha a conexao com o banco

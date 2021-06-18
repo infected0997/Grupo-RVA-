@@ -41,10 +41,11 @@
 
 	// Cria a table cartao
 	$resultado = mysqli_query($link, "CREATE TABLE IF NOT EXISTS cartao(
-		id_user INT(4)  NOT NULL,
-		nome VARCHAR(64) ,
-		numero VARCHAR(20) ,
-		CVV VARCHAR(3) ,
-		FOREIGN KEY(id_user))");
+		id_cartao INT(4) NOT NULL AUTO_INCREMENT ,
+		id_user INT(4)  NOT NULL ,
+		nome VARCHAR(64) NOT NULL ,
+		numero VARCHAR(1000) NOT NULL ,
+		CVV VARCHAR(1000) NOT NULL ,
+		PRIMARY KEY(id_cartao))");
 
 ?>

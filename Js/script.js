@@ -251,6 +251,15 @@ function prepararPagina(){
 			// PREPARA A PAGINA USER.HTML //
 			if(window.location.pathname == "/Grupo-RVA-/pages/user.html"){
 				$("#nomePessoaId").html(data.nome);
+				if(data.cartao != ''){
+					var cartoes = data.cartao.split('/');
+					var cont = 0;
+					for(cont = 0; cont < cartoes.length-1; cont++){
+						var cardAtual = cartoes[cont].split('=');
+						var cardAp = '<a class="cartao" id_card="'+cardAtual[0]+'">'+cardAtual[1]+'</a><br>'
+						$("#cartoesUserId").append(cardAp);
+					}
+				}
 			}
 		}
 	});
@@ -303,7 +312,7 @@ function mudarSenha(token){
 		// Fecha a janela
 		$("#fechaOverlayId").click(function(){
 			$("#dOverlay").hide();
-			$("#dOverlay").html();
+			$("#dOverlay").html("");
 		});
 
 		// Manda a nova senha para o php
@@ -352,7 +361,7 @@ function mudarSenha(token){
 					console.log(data);
 					if(data.status == 's'){
 						$("#dOverlay").hide();
-						$("#dOverlay").html();
+						$("#dOverlay").html("");
 						document.cookie = "tempoAtu=;expires=; path=/";
 						document.cookie = "ChaveSec=;expires=; path=/";
 						document.cookie = "iv=;expires=; path=/";
@@ -367,6 +376,11 @@ function mudarSenha(token){
 
 // Armazena funcoes de clique
 function funcaoClique(){
+	// Redireciona para cursos
+	$(".botao-redi").click(function(){
+		window.location.href = "./pages/cursos.html";
+	});
+
 	// Funcao clique para formatar a pagina para cadastro
 	$("#formularioCadastroId").click(function(){
 		trocaChave();
@@ -387,7 +401,33 @@ function funcaoClique(){
 	// Funcao clique para formatar a pagina para login
 	$("#formularioLoginId").click(function(){
 		trocaChave();
-		document.location.reload(true);
+		document.location.reload();
+	});
+
+	// Funcao clique sair
+	$("#sairContaId").click(function(){
+		informacoes = {"tipo":'sair'};
+		informacoes = enCripto(informacoes);
+		// Manda o formulario para o php buscar os dados no banco
+		$.ajax({
+			type: "POST",
+			dataType: "json",
+			url: "../php/tratarDados.php",
+			data: {
+				dados: informacoes[0],
+				hashDados: informacoes[1]
+			},
+			// Esconde o overlay
+			success: function(data) {
+				data = deCripto(data);
+				if(data.status == "ok"){
+					document.cookie = "tempoAtu=;expires=; path=/";
+					document.cookie = "ChaveSec=;expires=; path=/";
+					document.cookie = "iv=;expires=; path=/";
+					window.location.href = "https://rvaacademy/Grupo-RVA-/index.html";
+				}
+			}
+		});
 	});
 
 	// Funcao clique esqueceu a senha
@@ -408,7 +448,7 @@ function funcaoClique(){
 		// Fecha a janela
 		$("#fechaOverlayId").click(function(){
 			$("#dOverlay").hide();
-			$("#dOverlay").html();
+			$("#dOverlay").html("");
 		});
 
 		// Manda o nome de email para o php
@@ -435,8 +475,157 @@ function funcaoClique(){
 						$("#formRespostaId").addClass("form-correto");
 					}
 					$("#dOverlay").hide();
-					$("#dOverlay").html();
+					$("#dOverlay").html("");
 					$("#formRespostaId").html(data.mensagem);
+				}
+			});
+		});
+	});
+
+	// Funcao para puxar dados cartao
+	$(".cartao").click(function(){
+		trocaChave();
+		var idC = $(this).attr("id_card");
+		var numC = $(this).html();
+
+		var over =  '<div class="caixa-overlay" id="caixaOverId"><div class="table-overlay">'+
+					'<table>'+
+            		'<tr><td colspan="3" class="botaox-sair"><img src="../img/close.png" class="img-xfechar" alt="..." id="fechaOverlayId"></td></tr>'+
+            		'<tr><td colspan="3"><h4 class="alinha-texto-centro">Cartão ID:'+idC+'</h4></td></tr>'+
+					'<tr><td colspan="3"><h5 class="alinha-texto-centro">Número:'+numC+'</h4></td></tr>'+
+					'<tr><td colspan="3"><button id="botaoRemoveCartaoId" class="botao-deletar-conta">Remover cartão</td></tr>'+
+					'<tr><td colspan="3" id="formRespostaDelId" class="form-erro"></td></tr>'+
+					'</table></div></div>';
+		
+		// Ativa o overlay
+		$("#dOverlay").html(over);
+		$("#caixaOverId").css("height", "270px");
+		$("#caixaOverId").css("top", "26%");
+		$("#dOverlay").show();
+
+		// Fecha a janela
+		$("#fechaOverlayId").click(function(){
+			$("#dOverlay").hide();
+			$("#dOverlay").html("");
+		});
+
+		// Deleta cartao
+		$("#botaoRemoveCartaoId").click(function(){
+			informacoes = {"tipo":'deletarCard',"idCard":idC};
+			informacoes = enCripto(informacoes);
+			// Manda o formulario para o php buscar os dados no banco
+			$.ajax({
+				type: "POST",
+				dataType: "json",
+				url: "../php/tratarDados.php",
+				data: {
+					dados: informacoes[0],
+					hashDados: informacoes[1]
+				},
+				// Esconde o overlay
+				success: function(data) {
+					data = deCripto(data);
+					if(data.status == 's'){
+						$("#dOverlay").hide();
+			  			$("#dOverlay").html("");
+						document.location.reload();
+						return;
+					}
+					$("#formRespostaDelId").css("background-color", "white");
+					$("#formRespostaDelId").html(data.mensagem);
+				}
+			});
+		});
+	});
+
+	// Funcao de clique adicionar cartao
+	$("#adicionarCartaoId").click(function(){
+		trocaChave();
+		var over =  '<div class="caixa-overlay" id="caixaOverId"><div class="table-overlay">'+
+					'<table>'+
+            		'<tr><td colspan="3" class="botaox-sair"><img src="../img/close.png" class="img-xfechar" alt="..." id="fechaOverlayId"></td></tr>'+
+            		'<tr><td colspan="3"><h4 class="alinha-texto-centro">Digite seu cartão</h4></td></tr>'+
+					'<tr><td colspan="2" class="pad-especial"><input type="text" id="nomeProprieId" placeholder="Nome completo"></td>'+
+					'<td colspan="1" class="pad-especial"><input type="text" id="numeroCartaoId" placeholder="Numero do cartão" maxlength="16"></td>'+
+					'<td colspan="1" class="pad-especial"><input type="text" id="numeroCVVId" placeholder="CVV" maxlength="4"></td></tr>'+
+					'<tr><td colspan="3"><button id="botaoAddCartaoId" class="botao-email">Adicionar Cartão</td></tr>'+
+					'<tr><td colspan="3" id="formRespostaDelId" class="form-erro"></td></tr>'+
+					'</table></div></div>';
+
+		// Ativa o overlay
+		$("#dOverlay").html(over);
+		$("#caixaOverId").css("height", "270px");
+		$("#caixaOverId").css("top", "26%");
+		$("#dOverlay").show();
+
+		// Fecha a janela
+		$("#fechaOverlayId").click(function(){
+			$("#dOverlay").hide();
+			$("#dOverlay").html("");
+		});
+
+		// Manda a senha para o php
+		$("#botaoAddCartaoId").click(function(){
+			trocaChave();
+			var nomeP = $("#nomeProprieId").val();
+			var card = $("#numeroCartaoId").val();
+			var cvv = $("#numeroCVVId").val();
+			// Testa se a senha tem caracteres
+			if(card.length < 13 || cvv.length < 3 || nomeP == ""){
+				$("#nomeProprieId").val("");
+				$("#numeroCartaoId").val("");
+			    $("#numeroCVVId").val("");
+				$("#formRespostaDelId").css("background-color", "white");
+				$("#formRespostaDelId").html("Por favor, digite um cartão válido.");
+				return;
+			}
+			var cont = 0;
+			var testeNums = "0123456789";
+			for(cont = 0; cont < card.length; cont++){
+				if(testeNums.includes(card[cont])){
+					continue;
+				}
+				$("#nomeProprieId").val("");
+				$("#numeroCartaoId").val("");
+			    $("#numeroCVVId").val("");
+				$("#formRespostaDelId").css("background-color", "white");
+				$("#formRespostaDelId").html("Por favor, digite um cartão válido.");
+				return;
+			}
+			for(cont = 0; cont < cvv.length; cont++){
+				if(testeNums.includes(card[cont])){
+					continue;
+				}
+				$("#nomeProprieId").val("");
+				$("#numeroCartaoId").val("");
+			    $("#numeroCVVId").val("");
+				$("#formRespostaDelId").css("background-color", "white");
+				$("#formRespostaDelId").html("Por favor, digite um cartão válido.");
+				return;
+			}
+
+			informacoes = {"tipo":'adicionarCartao',"nome":nomeP,"cartao":card,"CVV":cvv};
+			informacoes = enCripto(informacoes);
+			// Manda o formulario para o php buscar os dados no banco
+			$.ajax({
+				type: "POST",
+				dataType: "json",
+				url: "../php/tratarDados.php",
+				data: {
+					dados: informacoes[0],
+					hashDados: informacoes[1]
+				},
+				// Esconde o overlay
+				success: function(data) {
+					data = deCripto(data);
+					if(data.status == 's'){
+						$("#dOverlay").hide();
+			  			$("#dOverlay").html("");
+						document.location.reload();
+						return;
+					}
+					$("#formRespostaDelId").css("background-color", "white");
+					$("#formRespostaDelId").html(data.mensagem);
 				}
 			});
 		});
@@ -468,7 +657,7 @@ function funcaoClique(){
 		// Fecha a janela
 		$("#fechaOverlayId").click(function(){
 			$("#dOverlay").hide();
-			$("#dOverlay").html();
+			$("#dOverlay").html("");
 		});
 
 		// Manda a senha para o php
@@ -502,7 +691,7 @@ function funcaoClique(){
 						document.cookie = "ChaveSec=;expires=; path=/";
 						document.cookie = "iv=;expires=; path=/";
 						$("#dOverlay").hide();
-						$("#dOverlay").html();
+						$("#dOverlay").html("");
 						window.location.href = "https://rvaacademy/Grupo-RVA-/index.html";
 					}
 					$("#formRespostaDelId").css("background-color", "white");
