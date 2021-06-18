@@ -392,6 +392,25 @@
         die;
     }
 
+    // Funcao authConta
+    function authCont($conexao){
+        $idUser = $_SESSION['usuario'];
+        $pass = $_POST['senha'];
+        $resultado = mysqli_query($conexao, "SELECT * FROM pessoa WHERE id_user = '$idUser' AND senha = '$pass'");
+        if($resultado){
+            $retorno['status'] = 's';
+            $retorno['mensagem'] = 'Usuario autenticado!';
+            $_SESSION['tempoAuth'] = time();
+        }
+        else{
+            $retorno['status'] = 'n';
+            $retorno['mensagem'] = 'Senha incorreta!';
+        }
+
+        echo json_encode(enCripto($retorno));
+        exit;
+    }
+
     // ~~ CODIGO PRINCIPAL ~~ // 
 
     // Coloca IP na sessao e sai se o usuario tiver um ip diferente da sessao
@@ -482,6 +501,9 @@
     }
     else if($tipo == 'sair'){
         sairDaConta($link);
+    }
+    else if($tipo == 'authC'){
+        authCont($link);
     }
 
     // Fecha a conexao com o banco

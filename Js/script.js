@@ -430,6 +430,66 @@ function funcaoClique(){
 		});
 	});
 
+	// Funcao clique para autenticar
+	$("#autenticarUserId").click(function(){
+		trocaChave();
+		var over =  '<div class="caixa-overlay" id="caixaOverId"><div class="table-overlay">'+
+					'<table>'+
+            		'<tr><td colspan="2" class="botaox-sair"><img src="../img/close.png" class="img-xfechar" alt="..." id="fechaOverlayId"></td></tr>'+
+            		'<tr><td colspan="2"><h4 class="alinha-texto-centro">Confirme sua senha</h4></td></tr>'+
+					'<tr><td colspan="2" class="pad-especial"><input type="password" id="senhaAuthId" placeholder="Senha"></td></tr>'+
+					'<tr><td colspan="2"><button id="botaoAuthId" class="botao-email">Autenticar</td></tr>'+
+					'<tr><td id="formRespostaDelId" class="form-erro"></td></tr>'+
+					'</table></div></div>';
+
+		// Ativa o overlay
+		$("#dOverlay").html(over);
+		$("#caixaOverId").css("height", "210px");
+		$("#dOverlay").show();
+
+		// Fecha a janela
+		$("#fechaOverlayId").click(function(){
+			$("#dOverlay").hide();
+			$("#dOverlay").html("");
+		});
+
+		// Manda a senha para o php
+		$("#botaoAuthId").click(function(){
+			trocaChave();
+			var senha = $("#senhaAuthId").val();
+			// Testa se a senha tem caracteres
+			if(senha.length < 12 || senha == senha.toLowerCase() || senha == senha.toUpperCase()){
+				$("#formRespostaDelId").css("background-color", "white");
+				$("#formRespostaDelId").html("Por favor, digite uma senha válida.");
+				return;
+			}
+			var senhamd5 = $.MD5(senha+"aexh452");
+
+			informacoes = {"tipo":'authC',"senha":senhamd5};
+			informacoes = enCripto(informacoes);
+			// Manda o formulario para o php buscar os dados no banco
+			$.ajax({
+				type: "POST",
+				dataType: "json",
+				url: "../php/tratarDados.php",
+				data: {
+					dados: informacoes[0],
+					hashDados: informacoes[1]
+				},
+				// Esconde o overlay
+				success: function(data) {
+					data = deCripto(data);
+					if(data.status == 's'){
+						$("#dOverlay").hide();
+						$("#dOverlay").html("");
+					}
+					$("#formRespostaDelId").css("background-color", "white");
+					$("#formRespostaDelId").html(data.mensagem);
+				}
+			});
+		});
+	});
+
 	// Funcao clique esqueceu a senha
 	$("#esqueciSenhaId").click(function(){
 		trocaChave();
@@ -564,7 +624,7 @@ function funcaoClique(){
 			$("#dOverlay").html("");
 		});
 
-		// Manda a senha para o php
+		// Manda o cartao
 		$("#botaoAddCartaoId").click(function(){
 			trocaChave();
 			var nomeP = $("#nomeProprieId").val();
